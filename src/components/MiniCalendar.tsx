@@ -19,11 +19,13 @@ interface MiniCalendarProps {
   onChange?: (d: Date) => void;
   activeDate: Date; // current big calendar month
   onMonthChange?: (d: Date) => void;
+  theme?: 'light' | 'dark';
 }
 
 const dayNames = ['S','M','T','W','T','F','S'];
 
-const MiniCalendar: React.FC<MiniCalendarProps> = ({ value, onChange, activeDate, onMonthChange }) => {
+const MiniCalendar: React.FC<MiniCalendarProps> = ({ value, onChange, activeDate, onMonthChange, theme = 'light' }) => {
+  const isLight = theme === 'light';
   const days = useMemo(() => {
     const monthStart = startOfMonth(activeDate);
     const monthEnd = endOfMonth(activeDate);
@@ -40,26 +42,24 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ value, onChange, activeDate
       <div className="flex items-center justify-between mb-3 select-none">
         <button
           onClick={handlePrev}
-          className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-gray-200 text-sm font-bold hover:bg-[#1a1c1e] rounded transition-colors"
+          className={`h-7 w-7 flex items-center justify-center text-sm font-bold rounded transition-colors ${isLight ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-200' : 'text-gray-400 hover:text-gray-200 hover:bg-[#2A2A2A]'}`}
           aria-label="Prev month"
         >
           ‹
         </button>
 
-        <div className="text-[12px] font-semibold text-gray-200 uppercase tracking-wide">
-          {format(activeDate, 'MMMM yyyy')}
-        </div>
+        <div className={`text-[12px] font-semibold uppercase tracking-wide ${isLight ? 'text-gray-700' : 'text-gray-200'}`}>{format(activeDate, 'MMMM yyyy')}</div>
 
         <button
           onClick={handleNext}
-          className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-gray-200 text-sm font-bold hover:bg-[#1a1c1e] rounded transition-colors"
+          className={`h-7 w-7 flex items-center justify-center text-sm font-bold rounded transition-colors ${isLight ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-200' : 'text-gray-400 hover:text-gray-200 hover:bg-[#2A2A2A]'}`}
           aria-label="Next month"
         >
           ›
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-[10px] text-center text-gray-500 font-medium mb-2 select-none">
+      <div className={`grid grid-cols-7 gap-1 text-[10px] text-center font-medium mb-2 select-none ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>
         {dayNames.map((d, i) => (
           <div key={`${d}-${i}`} className="py-1">
             {d}
@@ -77,8 +77,16 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ value, onChange, activeDate
               key={d.toISOString()}
               onClick={() => onChange?.(d)}
               className={`h-8 w-8 flex items-center justify-center rounded-md transition-colors focus:outline-none ${
-                today ? 'bg-[#e54848] text-white font-semibold' : faded ? 'text-[#4a4c4f]' : 'text-gray-300'
-              } ${selected && !today ? 'bg-[#2a2c2e]' : ''} hover:bg-[#22252a]`}
+                today
+                  ? 'bg-[#e54848] text-white font-semibold'
+                  : faded
+                    ? isLight
+                      ? 'text-gray-300'
+                      : 'text-[#4a4c4f]'
+                    : isLight
+                      ? 'text-gray-700'
+                      : 'text-gray-300'
+              } ${selected && !today ? (isLight ? 'bg-gray-200' : 'bg-[#2a2c2e]') : ''} ${isLight ? 'hover:bg-gray-200' : 'hover:bg-[#22252a]'}`}
             >
               {format(d, 'd')}
             </button>

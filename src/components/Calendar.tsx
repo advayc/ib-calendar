@@ -13,9 +13,12 @@ interface CalendarProps {
   controlledDate?: Date;
   onDateChange?: (d: Date) => void;
   onAdminClick?: () => void;
+  onSelectEvent?: (e: Event) => void;
+  theme?: 'light' | 'dark';
+  onToggleTheme?: () => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDateChange, onAdminClick }) => {
+const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDateChange, onAdminClick, onSelectEvent, theme = 'light', onToggleTheme }) => {
   const [internalDate, setInternalDate] = useState(new Date());
   const currentDate = controlledDate ?? internalDate;
   const setCurrentDate = (d: Date) => {
@@ -48,22 +51,26 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
     setCurrentDate(getNextMonth(currentDate));
   };
 
+  const isLight = theme === 'light';
+
   return (
-    <div className="flex-1 flex flex-col bg-[#0d0e0f]">
+    <div className={`flex-1 flex flex-col ${isLight ? 'bg-white' : 'bg-[#0d0e0f]'}`}>
       <MonthNavigation
         currentDate={currentDate}
         onPreviousMonth={handlePreviousMonth}
         onNextMonth={handleNextMonth}
         onAdminClick={onAdminClick}
+        theme={theme}
+        onToggleTheme={onToggleTheme}
       />
       
       <div className="flex-1 flex flex-col">
         {/* Weekday headers */}
-        <div className="grid grid-cols-7 border-b border-[#1e2022] bg-[#16181a] text-[11px] font-medium tracking-wide">
+        <div className={`grid grid-cols-7 border-b text-[11px] font-medium tracking-wide ${isLight ? 'bg-gray-100 border-gray-200' : 'bg-[#16181a] border-[#1e2022]'}`}>        
           {weekDays.map(day => (
             <div
               key={day}
-              className="py-3 text-center text-gray-400 uppercase"
+              className={`py-3 text-center uppercase ${isLight ? 'text-gray-500' : 'text-gray-400'}`}
             >
               {day}
             </div>
@@ -75,13 +82,19 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
             return (
               <div
                 key={index}
-                className={`relative border-r border-b border-[#1e2022] px-2 pt-2 pb-1 min-h-[145px] overflow-hidden ${
-                  isFaded ? 'bg-[#0f1112] text-[#4a4c4f]' : 'bg-[#14161a] text-gray-200'
+                className={`relative border-r border-b px-2 pt-2 pb-1 min-h-[145px] overflow-hidden ${
+                  isLight
+                    ? isFaded
+                      ? 'bg-gray-50 text-gray-400 border-gray-200'
+                      : 'bg-white text-gray-800 border-gray-200'
+                    : isFaded
+                      ? 'bg-[#0f1112] text-[#4a4c4f] border-[#1e2022]'
+                      : 'bg-[#14161a] text-gray-200 border-[#1e2022]'
                 }`}
               >
                 <div className="flex justify-end pt-1 pr-1">
                   {!day.isToday && (
-                    <span className="text-[13px] font-medium text-gray-300 select-none">
+                    <span className={`text-[13px] font-medium select-none ${isLight ? 'text-gray-600' : 'text-gray-300'}`}>
                       {getDayNumber(day.date)}
                     </span>
                   )}
@@ -101,10 +114,10 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
                         {visible.map(event => {
                           const club = clubsMap[event.clubId];
                           if (!club) return null;
-                          return <EventCard key={event.id} event={event} club={club} />;
+                          return <EventCard key={event.id} event={event} club={club} onClick={() => onSelectEvent?.(event)} theme={theme} />;
                         })}
                         {hiddenCount > 0 && (
-                          <div className="text-[10px] text-gray-500 ml-2 mt-1">+{hiddenCount} more</div>
+                          <div className={`text-[10px] ml-2 mt-1 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>+{hiddenCount} more</div>
                         )}
                       </>
                     );

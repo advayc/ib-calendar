@@ -12,6 +12,12 @@ export interface Event {
   date: string; // ISO date string
   time?: string;
   description?: string;
+  recurrence?: {
+    frequency: 'weekly';
+    interval: number; // every X weeks
+    count?: number; // number of occurrences
+    until?: string; // ISO date string end date (inclusive)
+  };
 }
 
 export interface CalendarDay {
