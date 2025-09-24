@@ -1,0 +1,230 @@
+{
+  "clubs": [
+    {
+      "id": "cs-club",
+      "name": "goodie",
+      "color": "#007AFF",
+      "enabled": true
+    },
+    {
+      "id": "robotics",
+      "name": "Robotics",
+      "color": "#FF9500",
+      "enabled": true
+    },
+    {
+      "id": "sac-meeting",
+      "name": "SAC Meeting",
+      "color": "#AF52DE",
+      "enabled": true
+    },
+    {
+      "id": "volleyball",
+      "name": "Volleyball",
+      "color": "#FFD60A",
+      "enabled": true
+    },
+    {
+      "id": "drama-club",
+      "name": "Drama Club",
+      "color": "#A2845E",
+      "enabled": true
+    },
+    {
+      "id": "debate-club",
+      "name": "Debate Club",
+      "color": "#FF3B30",
+      "enabled": true
+    },
+    {
+      "id": "environmental",
+      "name": "Environmental Club",
+      "color": "#34C759",
+      "enabled": true
+    },
+    {
+      "id": "music-club",
+      "name": "Music Club",
+      "color": "#007AFF",
+      "enabled": true
+    }
+  ],
+  "events": [
+    {
+      "id": "1",
+      "title": "CS Club Meeting",
+      "clubId": "cs-club",
+      "date": "2025-09-08",
+      "time": "3:30 PM",
+      "description": "Weekly programming session"
+    },
+    {
+      "id": "2",
+      "title": "Robotics Meeting",
+      "clubId": "robotics",
+      "date": "2025-09-08",
+      "time": "8:00 AM",
+      "description": "Robot building workshop"
+    },
+    {
+      "id": "3",
+      "title": "SAC Meeting",
+      "clubId": "sac-meeting",
+      "date": "2025-09-10",
+      "time": "9:00 AM",
+      "description": "Student council meeting"
+    },
+    {
+      "id": "4",
+      "title": "Volleyball Practice",
+      "clubId": "volleyball",
+      "date": "2025-09-07",
+      "time": "3:30 PM",
+      "description": "Team practice session"
+    },
+    {
+      "id": "5",
+      "title": "Deca Meeting",
+      "clubId": "sac-meeting",
+      "date": "2025-09-11",
+      "time": "9:00 AM",
+      "description": "Business competition prep"
+    },
+    {
+      "id": "6",
+      "title": "Cancel prime 16th",
+      "clubId": "drama-club",
+      "date": "2025-09-12",
+      "time": "9:00 AM",
+      "description": "Drama rehearsal cancelled"
+    },
+    {
+      "id": "7",
+      "title": "Quiz Bio - Protein",
+      "clubId": "environmental",
+      "date": "2025-09-15",
+      "time": "9:00 AM",
+      "description": "Biology quiz session"
+    },
+    {
+      "id": "8",
+      "title": "SAC Meeting",
+      "clubId": "sac-meeting",
+      "date": "2025-09-16",
+      "time": "3:00 PM",
+      "description": "Student council meeting"
+    },
+    {
+      "id": "9",
+      "title": "Club Fair pt 2",
+      "clubId": "sac-meeting",
+      "date": "2025-09-17",
+      "time": "8:00 AM",
+      "description": "Second club fair event"
+    },
+    {
+      "id": "10",
+      "title": "Early Morning Meeting",
+      "clubId": "cs-club",
+      "date": "2025-09-18",
+      "time": "11:00 AM",
+      "description": "Special CS club session"
+    },
+    {
+      "id": "11",
+      "title": "Robotics",
+      "clubId": "robotics",
+      "date": "2025-09-22",
+      "time": "9:00 AM",
+      "description": "Weekly robotics meeting"
+    },
+    {
+      "id": "12",
+      "title": "Library",
+      "clubId": "debate-club",
+      "date": "2025-09-22",
+      "time": "9:00 AM",
+      "description": "Debate club library session"
+    },
+    {
+      "id": "13",
+      "title": "SAC Meeting",
+      "clubId": "sac-meeting",
+      "date": "2025-09-23",
+      "time": "9:00 AM",
+      "description": "Student council meeting"
+    },
+    {
+      "id": "14",
+      "title": "Haircut",
+      "clubId": "sac-meeting",
+      "date": "2025-09-23",
+      "time": "9:00 AM",
+      "description": "Personal grooming reminder"
+    },
+    {
+      "id": "15",
+      "title": "English Presentation",
+      "clubId": "debate-club",
+      "date": "2025-09-25",
+      "time": "9:00 AM",
+      "description": "English class presentation"
+    },
+    {
+      "id": "16",
+      "title": "Extended Essay Guidance",
+      "clubId": "cs-club",
+      "date": "2025-09-26",
+      "time": "9:00 AM",
+      "description": "IB extended essay help"
+    },
+    {
+      "id": "17",
+      "title": "Unit 4 and 5 Test",
+      "clubId": "environmental",
+      "date": "2025-09-29",
+      "time": "9:00 AM",
+      "description": "Environmental science test"
+    },
+    {
+      "id": "18",
+      "title": "Myfundedfutures",
+      "clubId": "cs-club",
+      "date": "2025-09-29",
+      "time": "9:00 AM",
+      "description": "Career guidance session"
+    },
+    {
+      "id": "19",
+      "title": "Psych Presentation",
+      "clubId": "debate-club",
+      "date": "2025-09-30",
+      "time": "9:00 AM",
+      "description": "Psychology presentation"
+    },
+    {
+      "id": "20",
+      "title": "Barbeque",
+      "clubId": "sac-meeting",
+      "date": "2025-10-05",
+      "time": "9:00 AM",
+      "description": "School barbeque event"
+    },
+    {
+      "id": "21",
+      "title": "Need to Start Reading",
+      "clubId": "debate-club",
+      "date": "2025-10-05",
+      "time": "9:00 AM",
+      "description": "Reading assignment reminder"
+    },
+    {
+      "id": "22",
+      "title": "Grandma's Bday",
+      "clubId": "music-club",
+      "date": "2025-10-05",
+      "time": "All Day",
+      "description": "Personal family event"
+    }
+  ]
+}
