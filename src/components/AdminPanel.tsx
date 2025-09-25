@@ -1,7 +1,7 @@
  'use client';
 
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Clock, Repeat, PlusCircle, Save, Trash2, ExternalLink } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Repeat, PlusCircle, Save, Trash2, ExternalLink, Star } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { Event, Club } from '@/types';
 
@@ -479,11 +479,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
                   </div>
                 ) : (
                   <>
-                    <div className="flex-1 min-w-0 mb-2 sm:mb-0">
-                      <div className={`font-medium truncate ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>{event.title}</div>
-                      <div className={`text-sm ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{mounted ? new Date(event.date).toDateString() : ''} {event.time}</div>
-                      {event.location && <div className={`text-xs ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>📍 {event.location}</div>}
-                      {club && <div className={`text-xs mt-0.5 ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>{club.name}</div>}
+                    <div className="flex-1 min-w-0 mb-2 sm:mb-0 flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-medium truncate ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>{event.title}</div>
+                        <div className={`text-sm ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{mounted ? new Date(event.date).toDateString() : ''} {event.time}</div>
+                        {event.location && <div className={`text-xs ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>📍 {event.location}</div>}
+                        {club && <div className={`text-xs mt-0.5 ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>{club.name}</div>}
+                      </div>
+                      {event.recurrence && (
+                        <Star className="w-7 h-7 text-yellow-400 opacity-80" fill="#fde68a" stroke="#f59e42" />
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <button
