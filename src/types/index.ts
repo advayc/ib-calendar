@@ -12,6 +12,7 @@ export interface Event {
   date: string; // ISO date string
   time?: string;
   description?: string;
+  location?: string;
   recurrence?: {
     frequency: 'weekly';
     interval: number; // every X weeks

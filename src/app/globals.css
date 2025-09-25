@@ -6,8 +6,14 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #16181a;
-  color: #e5e7eb;
+}
+
+html, #__next, body {
+  height: 100%;
+}
+
+.app-root-fullheight {
+  min-height: 100vh;
 }
 
 /* Custom scrollbar */

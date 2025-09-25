@@ -21,7 +21,7 @@ const EventCard: React.FC<EventCardProps> = React.memo(({ event, club, onClick, 
       type="button"
       onClick={onClick}
       className={`group relative w-full flex items-center text-[11px] leading-tight cursor-pointer select-none rounded-sm min-h-[16px] hover:brightness-105 transition ${isLight ? 'text-gray-800' : 'text-gray-200'}`}
-      title={`${event.title}${event.time ? ` - ${event.time}` : ''}${event.description ? `\n${event.description}` : ''}`}
+  title={`${event.title}${event.time ? ` - ${event.time}` : ''}${event.location ? ` @ ${event.location}` : ''}${event.description ? `\n${event.description}` : ''}`}
       style={{ 
         backgroundColor: `${club.color}33`, // ~20% opacity
         paddingLeft: '4px',

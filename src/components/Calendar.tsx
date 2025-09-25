@@ -59,14 +59,13 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
         currentDate={currentDate}
         onPreviousMonth={handlePreviousMonth}
         onNextMonth={handleNextMonth}
-        onAdminClick={onAdminClick}
         theme={theme}
         onToggleTheme={onToggleTheme}
       />
       
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Weekday headers */}
-        <div className={`grid grid-cols-7 border-b text-[11px] font-medium tracking-wide ${isLight ? 'bg-gray-100 border-gray-200' : 'bg-[#16181a] border-[#1e2022]'}`}>        
+        <div className={`hidden sm:grid grid-cols-7 border-b text-[11px] font-medium tracking-wide ${isLight ? 'bg-gray-100 border-gray-200' : 'bg-[#16181a] border-[#1e2022]'}`}>        
           {weekDays.map(day => (
             <div
               key={day}
@@ -75,14 +74,21 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
               {day}
             </div>
           ))}
-        </div>        {/* Calendar grid */}
-        <div className="flex-1 grid grid-cols-7 grid-rows-6">
+        </div>
+        {/* Mobile weekday header (sticky) */}
+        <div className={`sm:hidden grid grid-cols-7 text-[10px] font-medium tracking-wide border-b ${isLight ? 'bg-gray-100/90 backdrop-blur border-gray-200' : 'bg-[#16181a]/80 backdrop-blur border-[#1e2022]'}`}>        
+          {weekDays.map(day => (
+            <div key={day} className={`py-2 text-center uppercase ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>{day}</div>
+          ))}
+        </div>
+        {/* Calendar grid */}
+        <div className="flex-1 grid grid-cols-7 grid-rows-6 overflow-x-auto sm:overflow-visible text-[11px]" style={{ WebkitOverflowScrolling: 'touch' }}>
           {calendarDays.map((day, index) => {
             const isFaded = !day.isCurrentMonth;
             return (
               <div
                 key={index}
-                className={`relative border-r border-b px-2 pt-2 pb-1 min-h-[145px] overflow-hidden ${
+                className={`relative border-r border-b px-1 sm:px-2 pt-1 sm:pt-2 pb-1 min-h-[110px] sm:min-h-[145px] overflow-hidden ${
                   isLight
                     ? isFaded
                       ? 'bg-gray-50 text-gray-400 border-gray-200'
@@ -92,7 +98,7 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
                       : 'bg-[#14161a] text-gray-200 border-[#1e2022]'
                 }`}
               >
-                <div className="flex justify-end pt-1 pr-1">
+                <div className="flex justify-end pt-0.5 pr-0.5 sm:pt-1 sm:pr-1">
                   {!day.isToday && (
                     <span className={`text-[13px] font-medium select-none ${isLight ? 'text-gray-600' : 'text-gray-300'}`}>
                       {getDayNumber(day.date)}
@@ -104,7 +110,7 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
                     </span>
                   )}
                 </div>
-                <div className="pt-4 space-y-[3px] overflow-hidden pr-2">
+                <div className="pt-3 sm:pt-4 space-y-[3px] overflow-hidden pr-1 sm:pr-2">
                   {(() => {
                     const maxVisible = 4;
                     const visible = day.events.slice(0, maxVisible);

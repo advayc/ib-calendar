@@ -8,15 +8,19 @@ interface AdminPanelProps {
   clubs: Club[];
   onAddEvent: (event: Omit<Event, 'id'>) => void;
   onDeleteEvent: (id: string) => void;
+  onUpdateClub?: (clubId: string, changes: Partial<Club>) => void;
   theme?: 'light' | 'dark';
 }
 
-const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDeleteEvent, theme = 'light' }) => {
+const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDeleteEvent, onUpdateClub, theme = 'light' }) => {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
   const [newEvent, setNewEvent] = useState({
     title: '',
     date: '',
     time: '',
     description: '',
+    location: '',
     clubId: '',
     recurrence: false,
     interval: 1,
@@ -32,6 +36,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
         date: newEvent.date,
         time: newEvent.time || undefined,
         description: newEvent.description || undefined,
+        location: newEvent.location || undefined,
         clubId: newEvent.clubId,
         recurrence: newEvent.recurrence
           ? {
@@ -48,6 +53,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
         date: '',
         time: '',
         description: '',
+        location: '',
         clubId: '',
         recurrence: false,
         interval: 1,
@@ -73,7 +79,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
     : 'bg-[#1a1c1e] border border-[#2a2c2e] hover:border-[#3a3c3e]';
 
   return (
-    <div className="space-y-6">
+  <div className="space-y-6">
       <div className={`p-4 rounded-lg ${sectionCard}`}>
         <h3 className={`text-lg font-medium mb-3 ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>Add New Event</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -107,6 +113,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
             className={`${fieldClass()} resize-none`}
             rows={3}
           />
+          <input
+            type="text"
+            placeholder="Location (optional)"
+            value={newEvent.location}
+            onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+            className={fieldClass()}
+          />
           <select
             value={newEvent.clubId}
             onChange={(e) => setNewEvent({ ...newEvent, clubId: e.target.value })}
@@ -128,7 +141,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
               Weekly Recurring
             </label>
             {newEvent.recurrence && (
-              <div className="grid grid-cols-3 gap-2 text-xs">
+              <div className="grid grid-cols-3 gap-2 text-xs xs:grid-cols-3">
                 <div className="col-span-1">
                   <label className={`block mb-1 ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>Every (weeks)</label>
                   <input
@@ -172,20 +185,50 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
       </div>
 
       <div className={`p-4 rounded-lg ${sectionCard}`}>
+        <h3 className={`text-lg font-medium mb-3 ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>Clubs</h3>
+        <div className="space-y-2">
+          {clubs.map(club => (
+            <div key={club.id} className={`flex flex-wrap sm:flex-nowrap items-center gap-3 p-2 rounded-md ${listItem}`}>
+              <input
+                type="color"
+                value={club.color || '#ffffff'}
+                onChange={(e) => {
+                  const color = e.target.value;
+                  if (onUpdateClub) onUpdateClub(club.id, { color });
+                }}
+                className="w-10 h-10 p-0 border-none rounded"
+              />
+              <div className="flex-1 min-w-[140px]">
+                <div className={`font-medium ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>{club.name}</div>
+                <div className={`text-xs ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{club.id}</div>
+              </div>
+              <button
+                onClick={() => onUpdateClub?.(club.id, { color: club.color })}
+                className={`${isLight ? 'bg-gray-200 hover:bg-gray-300 text-gray-800' : 'bg-[#222426] hover:bg-[#2a2c2f] text-gray-100'} px-3 py-1 rounded text-sm`}
+              >
+                Save
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className={`p-4 rounded-lg ${sectionCard}`}>
         <h3 className={`text-lg font-medium mb-3 ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>Existing Events</h3>
         <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
           {events.map(event => {
             const club = clubs.find(c => c.id === event.clubId);
             return (
-              <div key={event.id} className={`flex items-center justify-between p-3 rounded-md transition-colors ${listItem}`}>
-                <div className="flex-1 min-w-0">
+              <div key={event.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-md transition-colors ${listItem}`}>
+                <div className="flex-1 min-w-0 mb-2 sm:mb-0">
                   <div className={`font-medium truncate ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>{event.title}</div>
-                  <div className={`text-sm ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{new Date(event.date).toDateString()} {event.time}</div>
+                  <div className={`text-sm ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{mounted ? new Date(event.date).toDateString() : ''} {event.time}</div>
+                  {event.location && <div className={`text-xs ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>📍 {event.location}</div>}
                   {club && <div className={`text-xs mt-0.5 ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>{club.name}</div>}
                 </div>
                 <button
                   onClick={() => onDeleteEvent(event.id)}
-                  className="ml-4 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors flex-shrink-0"
+                  className="ml-0 sm:ml-4 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors flex-shrink-0"
                 >
                   Delete
                 </button>

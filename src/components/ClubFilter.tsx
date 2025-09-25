@@ -37,8 +37,8 @@ const ClubFilter: React.FC<ClubFilterProps> = ({ activeDate, onChangeDate, theme
           theme={theme}
         />
       </div>
-  <div className={`border-b ${isLight ? 'border-gray-200' : 'border-[#1e2022]'}`} />
-  <div className={`px-4 text-[12px] tracking-wide font-semibold uppercase mt-4 mb-4 select-none ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>Scheduling</div>
+  {/* Section header */}
+  <div className={`px-4 text-[12px] tracking-wide font-semibold uppercase mt-2 mb-4 select-none ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>Scheduling</div>
   <div className="flex-1 overflow-y-auto px-2">
         {clubs.map(club => (
           <button
