@@ -70,7 +70,7 @@ const CalendarApp: React.FC = () => {
     <ClubProvider initialClubs={clubs}>
   <div suppressHydrationWarning className={`min-h-screen md:h-screen flex flex-col md:flex-row text-sm transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#0b0c0d] text-gray-100'}`}>
         {/* Sidebar (desktop) / Drawer (mobile) */}
-        <div className={`md:w-[250px] md:flex-shrink-0 md:h-full ${showFilters ? 'block' : 'hidden'} md:block bg-inherit z-40`}> 
+        <div className={`md:w-[250px] md:flex-shrink-0 md:h-full md:relative fixed top-0 left-0 h-full w-[250px] transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 bg-inherit z-40 transition-transform duration-300`}> 
           <ClubFilter activeDate={activeDate} onChangeDate={(d) => { setActiveDate(d); if (showFilters) setShowFilters(false); }} theme={theme} />
         </div>
 
@@ -119,6 +119,18 @@ const CalendarApp: React.FC = () => {
                 onClick={e => e.stopPropagation()}
             >
               <h3 className="text-lg font-semibold mb-2">{selectedEvent.title}</h3>
+              {(() => {
+                const club = clubs.find(c => c.id === selectedEvent.clubId);
+                return club && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <div
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: club.color || '#ffffff' }}
+                    ></div>
+                    <p className={`text-sm font-medium ${theme==='light' ? 'text-gray-700' : 'text-gray-300'}`}>{club.name}</p>
+                  </div>
+                );
+              })()}
               {selectedEvent.time && <p className={`text-sm mb-1 font-mono ${theme==='light' ? 'opacity-90 text-gray-700' : 'opacity-80'}`}>Time: {selectedEvent.time}</p>}
               {selectedEvent.location && <p className={`text-sm mb-1 ${theme==='light' ? 'opacity-90 text-gray-700' : 'opacity-80'}`}>Location: {selectedEvent.location}</p>}
               {selectedEvent.description && <p className="text-sm mb-4 whitespace-pre-wrap leading-relaxed">{selectedEvent.description}</p>}

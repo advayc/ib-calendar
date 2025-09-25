@@ -87,7 +87,7 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
             return (
               <div
                 key={index}
-                className={`relative border-r border-b px-1 sm:px-2 pt-1 sm:pt-2 pb-1 min-h-[110px] sm:min-h-[145px] overflow-hidden ${
+                className={`relative border-r border-b px-1 sm:px-2 pt-1 sm:pt-2 pb-1 min-h-[calc(100vw/7)] sm:min-h-[145px] overflow-hidden ${
                   isLight
                     ? isFaded
                       ? 'bg-gray-50 text-gray-400 border-gray-200'

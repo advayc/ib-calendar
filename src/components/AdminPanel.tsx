@@ -1,7 +1,7 @@
  'use client';
 
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Clock, Repeat, PlusCircle, Save, Trash2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Repeat, PlusCircle, Save, Trash2, ExternalLink } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { Event, Club } from '@/types';
 
@@ -11,12 +11,13 @@ interface AdminPanelProps {
   onAddEvent: (event: Omit<Event, 'id'>) => void;
   onDeleteEvent: (id: string) => void;
   onUpdateClub?: (clubId: string, changes: Partial<Club>) => void;
+  onUpdateEvent?: (eventId: string, changes: Partial<Event>) => void;
   onAddClub?: (club: { name: string; slug?: string; color?: string }) => Promise<Club | undefined> | void;
   onDeleteClub?: (clubId: string) => void;
   theme?: 'light' | 'dark';
 }
 
-const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDeleteEvent, onUpdateClub, onAddClub, onDeleteClub, theme = 'light' }) => {
+const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDeleteEvent, onUpdateClub, onUpdateEvent, onAddClub, onDeleteClub, theme = 'light' }) => {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
   interface NewEventState {
@@ -47,33 +48,29 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
     count: ''
   });
 
-  // helper to provide simple weekday names
-  const weekdayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const getWeekdayName = (dateStr: string) => {
-    try { const d = new Date(dateStr); if (isNaN(d.getTime())) return ''; return weekdayNames[d.getDay()]; } catch { return ''; }
-  };
-
-  // If user picks a different weekday for recurrence, compute next date for that weekday (on or after current date)
-  const nextDateForWeekday = (fromDateStr: string, targetWeekdayIndex: number) => {
-    const from = new Date(fromDateStr);
-    if (isNaN(from.getTime())) return fromDateStr;
-    const start = new Date(from.getFullYear(), from.getMonth(), from.getDate());
-    const diff = (targetWeekdayIndex - start.getDay() + 7) % 7;
-    const result = new Date(start);
-    result.setDate(start.getDate() + diff);
-    // format YYYY-MM-DD
-    const y = result.getFullYear();
-    const m = String(result.getMonth() + 1).padStart(2,'0');
-    const d = String(result.getDate()).padStart(2,'0');
-    return `${y}-${m}-${d}`;
-  };
-
   const [allDay, setAllDay] = useState(false);
 
   // slug will be auto-generated server-side if omitted
   const [newClub, setNewClub] = useState({ name: '', color: '#4ade80' });
   const [addingClub, setAddingClub] = useState(false);
   const [clubStatus, setClubStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [editingClub, setEditingClub] = useState<string | null>(null);
+  const [editClubData, setEditClubData] = useState({ name: '', color: '' });
+
+  const [editingEvent, setEditingEvent] = useState<string | null>(null);
+  const [editEventData, setEditEventData] = useState<NewEventState>({
+    title: '',
+    date: '',
+    time: '',
+    description: '',
+    location: '',
+    clubId: '',
+    recurrence: false,
+    frequency: 'weekly',
+    interval: 1,
+    until: '',
+    count: ''
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +107,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
         until: '',
         count: '',
       });
-      } catch (err) {
+      } catch {
           toast.error('Failed to add event');
       }
     }
@@ -133,6 +130,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
 
   return (
   <div className="space-y-6">
+    <div className="flex justify-end">
+      <button
+        onClick={() => window.open('/', '_blank')}
+        className={`${isLight ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'} px-4 py-2 rounded-md transition-colors font-medium flex items-center gap-2`}
+      >
+        <ExternalLink className="w-4 h-4" /> Open Calendar
+      </button>
+    </div>
       <div className={`p-4 rounded-lg ${sectionCard}`}>
         <h3 className={`text-lg font-medium mb-3 ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>Add New Event</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -209,59 +214,29 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
                 onChange={(q) => setNewEvent({ ...newEvent, recurrence: q.target.checked })}
               />
               <Repeat className="w-4 h-4" />
-              Recurring
+              Make this a recurring event
             </label>
             {newEvent.recurrence && (
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <div className="text-xs text-gray-500">Repeats on</div>
-                    <div className={`px-2 py-1 rounded ${isLight ? 'bg-gray-100' : 'bg-[#16181a]'}`}>{getWeekdayName(newEvent.date) || '—'}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-xs text-gray-500">Or choose:</div>
-                    <select
-                        value={getWeekdayName(newEvent.date)}
-                        onChange={(e) => {
-                          const weekday = e.target.value;
-                          const idx = weekdayNames.indexOf(weekday);
-                          if (idx >= 0 && newEvent.date) {
-                            const newDate = nextDateForWeekday(newEvent.date, idx);
-                            setNewEvent({ ...newEvent, date: newDate });
-                          }
-                        }}
-                      className={fieldClass(true)}
-                    >
-                      {weekdayNames.map((w) => <option key={w} value={w}>{w}</option>)}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 flex-wrap items-end">
-                  <div className="w-36">
-                    <label className={`block mb-1 ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>Frequency</label>
+              <div className="space-y-3 pl-6 border-l-2 border-gray-300">
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>Repeat every</label>
+                  <div className="flex gap-2 items-center">
+                    <input type="number" min={1} max={30} value={newEvent.interval} onChange={(e) => setNewEvent({ ...newEvent, interval: parseInt(e.target.value) || 1 })} className={fieldClass(true)} style={{ width: '60px' }} />
                     <select className={fieldClass(true)} value={newEvent.frequency} onChange={(e) => setNewEvent({ ...newEvent, frequency: e.target.value as NewEventState['frequency'] })}>
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="biweekly">Bi-weekly</option>
-                      <option value="monthly">Monthly</option>
+                      <option value="daily">day(s)</option>
+                      <option value="weekly">week(s)</option>
+                      <option value="monthly">month(s)</option>
                     </select>
-                    <div className="mt-1 text-xs text-gray-500">Repeats: <span className="font-medium">{newEvent.frequency === 'biweekly' ? 'Every 2 weeks' : newEvent.frequency}</span></div>
-                  </div>
-                  <div className="w-28">
-                    <label className={`block mb-1 ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>Every</label>
-                    <input type="number" min={1} value={newEvent.interval} onChange={(e) => setNewEvent({ ...newEvent, interval: parseInt(e.target.value) || 1 })} className={fieldClass(true)} />
-                  </div>
-                  <div className="w-36">
-                    <label className={`block mb-1 ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>Ends on</label>
-                    <input type="date" value={newEvent.until} onChange={(e) => setNewEvent({ ...newEvent, until: e.target.value })} className={fieldClass(true)} />
-                  </div>
-                  <div className="w-28">
-                    <label className={`block mb-1 ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>Or count</label>
-                    <input type="number" min={1} value={newEvent.count} onChange={(e) => setNewEvent({ ...newEvent, count: e.target.value })} className={fieldClass(true)} placeholder="opt" />
                   </div>
                 </div>
-                <div className="text-xs text-gray-500">By default recurring events repeat on the weekday of the start date. Choose another weekday to update the start date.</div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>End after</label>
+                  <div className="flex gap-2 items-center">
+                    <input type="number" min={1} max={100} value={newEvent.count} onChange={(e) => setNewEvent({ ...newEvent, count: e.target.value })} className={fieldClass(true)} placeholder="occurrences" style={{ width: '100px' }} />
+                    <span className="text-sm text-gray-500">occurrences</span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">Or leave empty for no limit</div>
+                </div>
               </div>
             )}
             <button
@@ -337,33 +312,82 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
         <div className="space-y-2">
           {clubs.map(club => (
             <div key={club.id} className={`flex flex-wrap sm:flex-nowrap items-center gap-3 p-2 rounded-md ${listItem}`}>
-              <input
-                type="color"
-                value={club.color || '#ffffff'}
-                onChange={(e) => {
-                  const color = e.target.value;
-                  if (onUpdateClub) onUpdateClub(club.id, { color });
-                }}
-                className="w-10 h-10 p-0 border-none rounded"
-              />
-              <div className="flex-1 min-w-[140px]">
-                <div className={`font-medium ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>{club.name}</div>
-                <div className={`text-xs ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{club.id}</div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => { onUpdateClub?.(club.id, { color: club.color }); toast.success('Saved'); }}
-                  className={`${isLight ? 'bg-gray-200 hover:bg-gray-300 text-gray-800' : 'bg-[#222426] hover:bg-[#2a2c2f] text-gray-100'} px-3 py-1 rounded text-sm flex items-center gap-2`}
-                >
-                  <Save className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => { if (confirm(`Delete club “${club.name}” and its events?`)) { onDeleteClub?.(club.id); toast.success('Deleted'); } }}
-                  className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+              {editingClub === club.id ? (
+                <>
+                  <input
+                    type="color"
+                    value={editClubData.color}
+                    onChange={(e) => setEditClubData({ ...editClubData, color: e.target.value })}
+                    className="w-10 h-10 p-0 border-none rounded"
+                  />
+                  <input
+                    type="text"
+                    value={editClubData.name}
+                    onChange={(e) => setEditClubData({ ...editClubData, name: e.target.value })}
+                    className={`${fieldClass()} flex-1`}
+                    placeholder="Club name"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        if (onUpdateClub && editClubData.name.trim()) {
+                          onUpdateClub(club.id, { name: editClubData.name.trim(), color: editClubData.color });
+                          toast.success('Club updated');
+                          setEditingClub(null);
+                        }
+                      }}
+                      className={`${isLight ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-green-500 hover:bg-green-600 text-white'} px-3 py-1 rounded text-sm flex items-center gap-2`}
+                    >
+                      <Save className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setEditingClub(null)}
+                      className={`${isLight ? 'bg-gray-200 hover:bg-gray-300 text-gray-800' : 'bg-[#222426] hover:bg-[#2a2c2f] text-gray-100'} px-3 py-1 rounded text-sm`}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <input
+                    type="color"
+                    value={club.color || '#ffffff'}
+                    onChange={(e) => {
+                      const color = e.target.value;
+                      if (onUpdateClub) onUpdateClub(club.id, { color });
+                    }}
+                    className="w-10 h-10 p-0 border-none rounded"
+                  />
+                  <div className="flex-1 min-w-[140px]">
+                    <div className={`font-medium ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>{club.name}</div>
+                    <div className={`text-xs ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{club.id}</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingClub(club.id);
+                        setEditClubData({ name: club.name, color: club.color || '#ffffff' });
+                      }}
+                      className={`${isLight ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'} px-3 py-1 rounded text-sm flex items-center gap-2`}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => { onUpdateClub?.(club.id, { color: club.color }); toast.success('Saved'); }}
+                      className={`${isLight ? 'bg-gray-200 hover:bg-gray-300 text-gray-800' : 'bg-[#222426] hover:bg-[#2a2c2f] text-gray-100'} px-3 py-1 rounded text-sm flex items-center gap-2`}
+                    >
+                      <Save className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => { if (confirm(`Delete club “${club.name}” and its events?`)) { onDeleteClub?.(club.id); toast.success('Deleted'); } }}
+                      className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>
@@ -376,18 +400,122 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
             const club = clubs.find(c => c.id === event.clubId);
             return (
               <div key={event.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-md transition-colors ${listItem}`}>
-                <div className="flex-1 min-w-0 mb-2 sm:mb-0">
-                  <div className={`font-medium truncate ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>{event.title}</div>
-                  <div className={`text-sm ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{mounted ? new Date(event.date).toDateString() : ''} {event.time}</div>
-                  {event.location && <div className={`text-xs ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>📍 {event.location}</div>}
-                  {club && <div className={`text-xs mt-0.5 ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>{club.name}</div>}
-                </div>
-                <button
-                  onClick={() => { if (confirm('Delete event?')) { onDeleteEvent(event.id); toast.success('Deleted event'); } }}
-                  className="ml-0 sm:ml-4 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors flex-shrink-0 flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                {editingEvent === event.id ? (
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="text"
+                      value={editEventData.title}
+                      onChange={(e) => setEditEventData({ ...editEventData, title: e.target.value })}
+                      className={fieldClass()}
+                      placeholder="Event Title"
+                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        value={editEventData.date}
+                        onChange={(e) => setEditEventData({ ...editEventData, date: e.target.value })}
+                        className={fieldClass(true)}
+                      />
+                      <input
+                        type="time"
+                        value={editEventData.time}
+                        onChange={(e) => setEditEventData({ ...editEventData, time: e.target.value })}
+                        className={fieldClass(true)}
+                      />
+                    </div>
+                    <textarea
+                      value={editEventData.description}
+                      onChange={(e) => setEditEventData({ ...editEventData, description: e.target.value })}
+                      className={`${fieldClass()} resize-none`}
+                      rows={2}
+                      placeholder="Description"
+                    />
+                    <input
+                      type="text"
+                      value={editEventData.location}
+                      onChange={(e) => setEditEventData({ ...editEventData, location: e.target.value })}
+                      className={fieldClass()}
+                      placeholder="Location"
+                    />
+                    <select
+                      value={editEventData.clubId}
+                      onChange={(e) => setEditEventData({ ...editEventData, clubId: e.target.value })}
+                      className={fieldClass()}
+                    >
+                      <option value="">Select Club</option>
+                      {clubs.map(club => (
+                        <option key={club.id} value={club.id}>{club.name}</option>
+                      ))}
+                    </select>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (editEventData.title && editEventData.date && editEventData.clubId) {
+                            if (onUpdateEvent) {
+                              onUpdateEvent(event.id, {
+                                title: editEventData.title,
+                                date: editEventData.date,
+                                time: editEventData.time || undefined,
+                                description: editEventData.description || undefined,
+                                location: editEventData.location || undefined,
+                                clubId: editEventData.clubId
+                              });
+                              toast.success('Event updated');
+                              setEditingEvent(null);
+                            }
+                          }
+                        }}
+                        className={`${isLight ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-green-500 hover:bg-green-600 text-white'} px-3 py-1 rounded text-sm flex items-center gap-2`}
+                      >
+                        <Save className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setEditingEvent(null)}
+                        className={`${isLight ? 'bg-gray-200 hover:bg-gray-300 text-gray-800' : 'bg-[#222426] hover:bg-[#2a2c2f] text-gray-100'} px-3 py-1 rounded text-sm`}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex-1 min-w-0 mb-2 sm:mb-0">
+                      <div className={`font-medium truncate ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>{event.title}</div>
+                      <div className={`text-sm ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{mounted ? new Date(event.date).toDateString() : ''} {event.time}</div>
+                      {event.location && <div className={`text-xs ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>📍 {event.location}</div>}
+                      {club && <div className={`text-xs mt-0.5 ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>{club.name}</div>}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingEvent(event.id);
+                          setEditEventData({
+                            title: event.title,
+                            date: event.date,
+                            time: event.time || '',
+                            description: event.description || '',
+                            location: event.location || '',
+                            clubId: event.clubId,
+                            recurrence: !!event.recurrence,
+                            frequency: event.recurrence?.frequency || 'weekly',
+                            interval: event.recurrence?.interval || 1,
+                            until: event.recurrence?.until || '',
+                            count: event.recurrence?.count?.toString() || ''
+                          });
+                        }}
+                        className={`${isLight ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'} px-3 py-1 rounded text-sm flex items-center gap-2`}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => { if (confirm('Delete event?')) { onDeleteEvent(event.id); toast.success('Deleted event'); } }}
+                        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors flex-shrink-0 flex items-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             );
           })}

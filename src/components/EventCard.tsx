@@ -24,7 +24,7 @@ const EventCard: React.FC<EventCardProps> = React.memo(({ event, club, onClick, 
   title={`${event.title}${event.time ? ` - ${event.time}` : ''}${event.location ? ` @ ${event.location}` : ''}${event.description ? `\n${event.description}` : ''}`}
       style={{ 
         backgroundColor: `${club.color}33`, // ~20% opacity
-        paddingLeft: '4px',
+        paddingLeft: '0px',
         paddingRight: '4px',
         paddingTop: '2px',
         paddingBottom: '2px'

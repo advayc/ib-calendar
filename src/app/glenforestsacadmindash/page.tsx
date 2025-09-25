@@ -99,6 +99,11 @@ const AdminPage: React.FC = () => {
     try { const updated = await apiClient.patch<Club>('/api/clubs', { id: clubId, ...changes }); setClubs(prev => prev.map(c => c.id === clubId ? { ...c, ...updated } : c)); } catch (err) { console.error('Update club failed', err); }
   }, [adminToken]);
 
+  const handleUpdateEvent = useCallback(async (eventId: string, changes: Partial<Event>) => {
+    if (adminToken) apiClient.setToken(adminToken);
+    try { const updated = await apiClient.patch<Event>('/api/events', { id: eventId, ...changes }); setEvents(prev => prev.map(e => e.id === eventId ? { ...e, ...updated, date: updated.date?.slice?.(0,10) || updated.date } : e)); } catch (err) { console.error('Update event failed', err); }
+  }, [adminToken]);
+
   return (
     <div className={`min-h-screen p-4 sm:p-6 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#0b0c0d] text-gray-100'}`}>
       <div className="max-w-5xl mx-auto">
@@ -116,7 +121,7 @@ const AdminPage: React.FC = () => {
                 <button onClick={handleLogout} className="px-3 py-1 rounded border text-sm">Logout</button>
               </div>
             </div>
-            <AdminPanel events={events} clubs={clubs} onAddEvent={handleAddEvent} onDeleteEvent={handleDeleteEvent} onUpdateClub={handleUpdateClub} onAddClub={handleAddClub} onDeleteClub={handleDeleteClub} theme={theme} />
+            <AdminPanel events={events} clubs={clubs} onAddEvent={handleAddEvent} onDeleteEvent={handleDeleteEvent} onUpdateClub={handleUpdateClub} onUpdateEvent={handleUpdateEvent} onAddClub={handleAddClub} onDeleteClub={handleDeleteClub} theme={theme} />
           </div>
         )}
       </div>
