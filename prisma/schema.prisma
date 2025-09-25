@@ -5,9 +5,13 @@
 
 // Use SQLite for local development by default. If you want to use PostgreSQL,
 // set DATABASE_URL in your environment and update this file accordingly.
+// Use DATABASE_URL to connect to your database. For local development you can
+// keep using SQLite by setting DATABASE_URL to a sqlite file URL (e.g.
+// "file:./dev.db") or by using a separate schema. For production/deployment
+// point DATABASE_URL to your Supabase Postgres connection string.
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
