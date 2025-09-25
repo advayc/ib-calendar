@@ -27,7 +27,7 @@ const ClubFilter: React.FC<ClubFilterProps> = ({ activeDate, onChangeDate, theme
 
   const isLight = theme === 'light';
   return (
-    <div className={`h-full flex flex-col border-r ${isLight ? 'bg-white text-gray-800 border-gray-200' : 'bg-[#0d0e0f] text-gray-200 border-[#1e2022]'}`}>
+    <div className={`h-full flex flex-col border-r bg-inherit ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>
       <div className="px-4 pt-6 pb-4">
         <MiniCalendar
           value={miniDate}

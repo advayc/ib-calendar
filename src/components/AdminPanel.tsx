@@ -1,6 +1,6 @@
  'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Calendar as CalendarIcon, Clock, Repeat, PlusCircle, Save, Trash2, ExternalLink, Star } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { Event, Club } from '@/types';
@@ -71,6 +71,28 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
     until: '',
     count: ''
   });
+  const [eventSearch, setEventSearch] = useState('');
+
+  const displayedEvents = useMemo(() => {
+    const q = eventSearch.trim().toLowerCase();
+    const filtered = q ? events.filter(e => e.title.toLowerCase().includes(q)) : events.slice();
+    const seriesMap = new Map<string, Event[]>();
+    const singles: Event[] = [];
+    filtered.forEach(ev => {
+      const hasRec = !!(ev.recurrence || ev.recurrenceFrequency);
+      if (hasRec) {
+        const freq = ev.recurrence?.frequency || ev.recurrenceFrequency || '';
+        const key = `${ev.title}||${ev.clubId}||${freq}`;
+        const arr = seriesMap.get(key) || [];
+        arr.push(ev);
+        seriesMap.set(key, arr);
+      } else {
+        singles.push(ev);
+      }
+    });
+    const seriesFirst = Array.from(seriesMap.values()).map(group => group.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0]);
+    return [...singles, ...seriesFirst].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [events, eventSearch]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -395,8 +417,17 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
 
       <div className={`p-4 rounded-lg ${sectionCard}`}>
         <h3 className={`text-lg font-medium mb-3 ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>Existing Events</h3>
+        <div className="mb-2">
+          <input
+            type="text"
+            placeholder="Search events..."
+            value={eventSearch}
+            onChange={(e) => setEventSearch(e.target.value)}
+            className={`${fieldClass()} mb-2`} 
+          />
+        </div>
         <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-          {events.map(event => {
+          {displayedEvents.map(event => {
             const club = clubs.find(c => c.id === event.clubId);
             return (
               <div key={event.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-md transition-colors ${listItem}`}>

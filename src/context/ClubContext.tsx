@@ -8,6 +8,7 @@ interface ClubContextType {
   setClubs: (clubs: Club[]) => void;
   toggleClub: (clubId: string) => void;
   enabledClubIds: string[];
+  prioritizedClubIds: string[];
 }
 
 const ClubContext = createContext<ClubContextType | undefined>(undefined);
@@ -46,8 +47,10 @@ export const ClubProvider: React.FC<ClubProviderProps> = ({
 
   const enabledClubIds = clubs.filter(club => club.enabled).map(club => club.id);
 
+  const prioritizedClubIds = clubs.filter(c => c.prioritized || c.name.toLowerCase().includes('sac')).map(c => c.id);
+
   return (
-    <ClubContext.Provider value={{ clubs, setClubs, toggleClub, enabledClubIds }}>
+    <ClubContext.Provider value={{ clubs, setClubs, toggleClub, enabledClubIds, prioritizedClubIds }}>
       {children}
     </ClubContext.Provider>
   );

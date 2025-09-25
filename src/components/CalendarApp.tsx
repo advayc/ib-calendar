@@ -42,7 +42,7 @@ const CalendarApp: React.FC = () => {
         ]);
         // Normalize date -> string (ISO) for existing UI
         setEvents(remoteEvents.map((e) => ({ ...e, date: e.date?.slice(0,10) })));
-        setClubs(remoteClubs.map((c) => ({ id: c.id, name: c.name, color: c.color, enabled: c.enabled })));
+        setClubs(remoteClubs.map((c) => ({ id: c.id, name: c.name, color: c.color, enabled: c.enabled, prioritized: c.prioritized || false })));
       } catch {
         // fallback to empty lists
         setEvents([]);

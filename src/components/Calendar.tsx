@@ -23,7 +23,7 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
   const setCurrentDate = (d: Date) => {
     if (onDateChange) onDateChange(d); else setInternalDate(d);
   };
-  const { enabledClubIds } = useClubs();
+  const { enabledClubIds, prioritizedClubIds } = useClubs();
 
   const clubsMap = useMemo(() => {
     return clubs.reduce((acc, club) => {
@@ -112,14 +112,21 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
                 <div className="pt-3 sm:pt-4 space-y-[3px] overflow-hidden pr-1 sm:pr-2">
                   {(() => {
                     const maxVisible = 4;
-                    const visible = day.events.slice(0, maxVisible);
+                    const sortedEvents = [...day.events].sort((a, b) => {
+                      const aPrior = prioritizedClubIds.includes(a.clubId);
+                      const bPrior = prioritizedClubIds.includes(b.clubId);
+                      if (aPrior && !bPrior) return -1;
+                      if (!aPrior && bPrior) return 1;
+                      return 0;
+                    });
+                    const visible = sortedEvents.slice(0, maxVisible);
                     const hiddenCount = day.events.length - visible.length;
                     return (
                       <>
                         {visible.map(event => {
                           const club = clubsMap[event.clubId];
                           if (!club) return null;
-                          return <EventCard key={event.id} event={event} club={club} onClick={() => onSelectEvent?.(event)} theme={theme} />;
+                          return <EventCard key={event.id} event={event} club={club} onClick={() => onSelectEvent?.(event)} theme={theme} isPrioritized={prioritizedClubIds.includes(event.clubId)} />;
                         })}
                         {hiddenCount > 0 && (
                           <div className={`text-[10px] ml-2 mt-1 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>+{hiddenCount} more</div>

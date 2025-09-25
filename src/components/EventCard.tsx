@@ -9,9 +9,10 @@ interface EventCardProps {
   club: Club;
   onClick?: () => void;
   theme?: 'light' | 'dark';
+  isPrioritized?: boolean;
 }
 
-const EventCard: React.FC<EventCardProps> = React.memo(({ event, club, onClick, theme = 'light' }) => {
+const EventCard: React.FC<EventCardProps> = React.memo(({ event, club, onClick, theme = 'light', isPrioritized = false }) => {
   // Attempt to derive ordering weight from time for future sorting (not used yet here directly)
   const timeDisplay = useMemo(() => formatEventTime(event.time), [event.time]);
 
@@ -30,7 +31,7 @@ const EventCard: React.FC<EventCardProps> = React.memo(({ event, club, onClick, 
         paddingBottom: '2px'
       }}
     >
-      <span className={`truncate flex-1 font-medium ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>{event.title}</span>
+      <span className={`truncate flex-1 font-medium ${isPrioritized ? 'font-bold' : ''} ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>{event.title}</span>
       {timeDisplay && (
         <span className={`ml-2 text-[10px] tabular-nums ${isLight ? 'text-gray-500' : 'text-gray-300'}`}>
           {timeDisplay}
