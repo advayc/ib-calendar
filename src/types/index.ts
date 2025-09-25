@@ -14,7 +14,7 @@ export interface Event {
   description?: string;
   location?: string;
   recurrence?: {
-    frequency: 'weekly';
+    frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly';
     interval: number; // every X weeks
     count?: number; // number of occurrences
     until?: string; // ISO date string end date (inclusive)

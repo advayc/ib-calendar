@@ -31,6 +31,11 @@ export const ClubProvider: React.FC<ClubProviderProps> = ({
 }) => {
   const [clubs, setClubs] = useState<Club[]>(initialClubs);
 
+  // Keep internal clubs in sync when parent provides new club list
+  React.useEffect(() => {
+    setClubs(initialClubs);
+  }, [initialClubs]);
+
   const toggleClub = (clubId: string) => {
     setClubs(prevClubs =>
       prevClubs.map(club =>

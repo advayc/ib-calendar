@@ -29,10 +29,36 @@ export const getCalendarDays = (date: Date, events: Event[]): CalendarDay[] => {
 
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
+  // Normalize event dates to local YYYY-MM-DD to avoid timezone shift when
+  // comparing Date objects stored as ISO strings. If the incoming event.date
+  // is a plain YYYY-MM-DD string, parse it as a local date (no timezone).
+  const normalizeDateOnly = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+  const parseEventDateAsLocal = (dateVal: unknown): Date | null => {
+    if (!dateVal) return null;
+    try {
+      if (typeof dateVal === 'string') {
+        const s = dateVal.slice(0, 10);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+          const [y, m, dd] = s.split('-').map((n) => parseInt(n, 10));
+          return new Date(y, m - 1, dd);
+        }
+      }
+      const ev = new Date(String(dateVal));
+      if (isNaN(ev.getTime())) return null;
+      return normalizeDateOnly(ev);
+    } catch {
+      return null;
+    }
+  };
+
   return days.map(day => {
-    const dayEvents = events.filter(event => 
-      isSameDay(new Date(event.date), day)
-    );
+    const dayStart = normalizeDateOnly(day);
+    const dayEvents = events.filter(event => {
+      const evDate = parseEventDateAsLocal((event as any).date);
+      if (!evDate) return false;
+      return evDate.getTime() === dayStart.getTime();
+    });
 
     return {
       date: day,

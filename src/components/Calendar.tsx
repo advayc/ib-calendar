@@ -12,13 +12,12 @@ interface CalendarProps {
   clubs: Club[];
   controlledDate?: Date;
   onDateChange?: (d: Date) => void;
-  onAdminClick?: () => void;
   onSelectEvent?: (e: Event) => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDateChange, onAdminClick, onSelectEvent, theme = 'light', onToggleTheme }) => {
+const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDateChange, onSelectEvent, theme = 'light', onToggleTheme }) => {
   const [internalDate, setInternalDate] = useState(new Date());
   const currentDate = controlledDate ?? internalDate;
   const setCurrentDate = (d: Date) => {

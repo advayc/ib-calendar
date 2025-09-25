@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -13,7 +12,7 @@ const AdminPage: React.FC = () => {
   const [adminToken, setAdminToken] = useState<string | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [clubs, setClubs] = useState<Club[]>([]);
-  const [loading, setLoading] = useState(false);
+  // loading state removed (not used)
   const [loginError, setLoginError] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light'|'dark'>(() => (typeof window !== 'undefined' ? (localStorage.getItem('gfs-theme') as 'light'|'dark') || 'light' : 'light'));
 
@@ -21,19 +20,19 @@ const AdminPage: React.FC = () => {
     try {
       const t = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
       if (t) { setAdminToken(t); apiClient.setToken(t); }
-    } catch (e) {}
+    } catch {
+    }
   }, []);
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true);
       try {
-        const [evs, cls] = await Promise.all([apiClient.get('/api/events'), apiClient.get('/api/clubs')]);
-        setEvents(evs.map((e: any) => ({ ...e, date: e.date?.slice?.(0,10) || e.date })));
-        setClubs(cls.map((c: any) => ({ id: c.id, name: c.name, color: c.color, enabled: c.enabled })));
-      } catch (e) {
-        console.error('Load failed', e);
-      } finally { setLoading(false); }
+  const [evs, cls] = await Promise.all([apiClient.get<Event[]>('/api/events'), apiClient.get<Club[]>('/api/clubs')]);
+  setEvents(evs.map((e) => ({ ...e, date: e.date?.slice?.(0,10) || e.date })));
+  setClubs(cls.map((c) => ({ id: c.id, name: c.name, color: c.color, enabled: c.enabled })));
+      } catch (err) {
+        console.error('Load failed', err);
+      }
     };
     load();
   }, []);
@@ -46,8 +45,8 @@ const AdminPage: React.FC = () => {
       const data = await res.json();
       setAdminToken(data.token);
       apiClient.setToken(data.token);
-      try { localStorage.setItem(STORAGE_KEY, data.token); } catch (e) {}
-    } catch (e) {
+      try { localStorage.setItem(STORAGE_KEY, data.token); } catch {}
+    } catch {
       setLoginError('Invalid credentials');
     }
   };
@@ -55,46 +54,49 @@ const AdminPage: React.FC = () => {
   const handleLogout = () => {
     setAdminToken(null);
     apiClient.setToken(null);
-    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
   };
 
   const handleAddEvent = useCallback(async (newEvent: Omit<Event, 'id'>) => {
-    if (!adminToken) return;
-    apiClient.setToken(adminToken);
+    if (adminToken) apiClient.setToken(adminToken);
     try {
       if (newEvent.recurrence) {
-        const created = await apiClient.post('/api/events', { ...newEvent, recurrence: { frequency: 'weekly', interval: newEvent.recurrence.interval, count: newEvent.recurrence.count, until: newEvent.recurrence.until } });
-        const normalized = created.map((e: any) => ({ ...e, date: e.date.slice(0,10) }));
+        const created = await apiClient.post<Event[]>('/api/events', { ...newEvent, recurrence: { frequency: newEvent.recurrence.frequency, interval: newEvent.recurrence.interval, count: newEvent.recurrence.count, until: newEvent.recurrence.until } });
+        const normalized = created.map((e) => ({ ...e, date: e.date.slice(0,10) }));
         setEvents(prev => [...prev, ...normalized]);
       } else {
-        const created = await apiClient.post('/api/events', newEvent);
+        const created = await apiClient.post<Event>('/api/events', newEvent);
         setEvents(prev => [...prev, { ...created, date: created.date.slice(0,10) }]);
       }
-    } catch (e) { console.error('Add event failed', e); }
+  } catch (err) { console.error('Add event failed', err); }
   }, [adminToken]);
 
   const handleDeleteEvent = useCallback(async (eventId: string) => {
-    if (!adminToken) return;
-    apiClient.setToken(adminToken);
-    try { await apiClient.delete(`/api/events?id=${eventId}`); setEvents(prev => prev.filter(e => e.id !== eventId)); } catch (e) { console.error('Delete failed', e); }
+    if (adminToken) apiClient.setToken(adminToken);
+    try { await apiClient.delete(`/api/events?id=${eventId}`); setEvents(prev => prev.filter(e => e.id !== eventId)); } catch (err) { console.error('Delete failed', err); }
   }, [adminToken]);
 
-  const handleAddClub = useCallback(async (club: { name: string; slug: string; color?: string }) => {
-    if (!adminToken) return;
-    apiClient.setToken(adminToken);
-    try { const created = await apiClient.post('/api/clubs', club); setClubs(prev => [...prev, { id: created.id, name: created.name, color: created.color, enabled: created.enabled }]); } catch (e) { console.error('Add club failed', e); }
+  const handleAddClub = useCallback(async (club: { name: string; slug?: string; color?: string }) => {
+    if (adminToken) apiClient.setToken(adminToken);
+    try {
+      const created = await apiClient.post<Club>('/api/clubs', club);
+      setClubs(prev => [...prev, { id: created.id, name: created.name, color: created.color, enabled: created.enabled }]);
+      return created;
+    } catch (err) {
+      console.error('Add club failed', err);
+      // rethrow so UI shows the error
+      throw err;
+    }
   }, [adminToken]);
 
   const handleDeleteClub = useCallback(async (clubId: string) => {
-    if (!adminToken) return;
-    apiClient.setToken(adminToken);
-    try { await apiClient.delete(`/api/clubs?id=${clubId}`); setClubs(prev => prev.filter(c => c.id !== clubId)); setEvents(prev => prev.filter(e => e.clubId !== clubId)); } catch (e) { console.error('Delete club failed', e); }
+    if (adminToken) apiClient.setToken(adminToken);
+    try { await apiClient.delete(`/api/clubs?id=${clubId}`); setClubs(prev => prev.filter(c => c.id !== clubId)); setEvents(prev => prev.filter(e => e.clubId !== clubId)); } catch (err) { console.error('Delete club failed', err); }
   }, [adminToken]);
 
   const handleUpdateClub = useCallback(async (clubId: string, changes: Partial<Club>) => {
-    if (!adminToken) return;
-    apiClient.setToken(adminToken);
-    try { const updated = await apiClient.patch('/api/clubs', { id: clubId, ...changes }); setClubs(prev => prev.map(c => c.id === clubId ? { ...c, ...updated } : c)); } catch (e) { console.error('Update club failed', e); }
+    if (adminToken) apiClient.setToken(adminToken);
+    try { const updated = await apiClient.patch<Club>('/api/clubs', { id: clubId, ...changes }); setClubs(prev => prev.map(c => c.id === clubId ? { ...c, ...updated } : c)); } catch (err) { console.error('Update club failed', err); }
   }, [adminToken]);
 
   return (
@@ -114,7 +116,7 @@ const AdminPage: React.FC = () => {
                 <button onClick={handleLogout} className="px-3 py-1 rounded border text-sm">Logout</button>
               </div>
             </div>
-            <AdminPanel events={events} clubs={clubs} onAddEvent={handleAddEvent} onDeleteEvent={handleDeleteEvent} onUpdateClub={handleUpdateClub} theme={theme} />
+            <AdminPanel events={events} clubs={clubs} onAddEvent={handleAddEvent} onDeleteEvent={handleDeleteEvent} onUpdateClub={handleUpdateClub} onAddClub={handleAddClub} onDeleteClub={handleDeleteClub} theme={theme} />
           </div>
         )}
       </div>

@@ -38,7 +38,7 @@ const ClubFilter: React.FC<ClubFilterProps> = ({ activeDate, onChangeDate, theme
         />
       </div>
   {/* Section header */}
-  <div className={`px-4 text-[12px] tracking-wide font-semibold uppercase mt-2 mb-4 select-none ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>Scheduling</div>
+  <div className={`px-4 text-[12px] tracking-wide font-semibold uppercase mt-2 mb-4 select-none ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>Clubs</div>
   <div className="flex-1 overflow-y-auto px-2">
         {clubs.map(club => (
           <button

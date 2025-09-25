@@ -1,13 +1,13 @@
-'use client';
+ 'use client';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Calendar from '@/components/Calendar';
 import ClubFilter from '@/components/ClubFilter';
 // AdminPanel moved to a secret route; keep main app lean
 import { ClubProvider } from '@/context/ClubContext';
 import { Event, Club } from '@/types';
 import { apiClient } from '@/lib/apiClient';
+import toast, { Toaster } from 'react-hot-toast';
 // LoginForm handled on the secret admin page
 
 const CalendarApp: React.FC = () => {
@@ -17,7 +17,7 @@ const CalendarApp: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [clubs, setClubs] = useState<Club[]>([]);
   // admin token and login handled on the secret admin route
-  const [loadingData, setLoadingData] = useState(false);
+  // loadingData intentionally removed; we show minimal loading states elsewhere if needed
   const [activeDate, setActiveDate] = useState<Date>(new Date());
   // admin modal removed; use secret route /glenforestsacadmindash
   // Theme: initialize to 'light' for server/client parity, then hydrate from localStorage after mount
@@ -35,21 +35,18 @@ const CalendarApp: React.FC = () => {
   // Initial load from backend (fallback to static on failure)
   useEffect(() => {
     const load = async () => {
-      setLoadingData(true);
       try {
         const [remoteEvents, remoteClubs] = await Promise.all([
-          apiClient.get('/api/events'),
-          apiClient.get('/api/clubs')
+          apiClient.get<Event[]>('/api/events'),
+          apiClient.get<Club[]>('/api/clubs')
         ]);
         // Normalize date -> string (ISO) for existing UI
-        setEvents(remoteEvents.map((e: any) => ({ ...e, date: e.date?.slice(0,10) })));
-        setClubs(remoteClubs.map((c: any) => ({ id: c.id, name: c.name, color: c.color, enabled: c.enabled })));
-      } catch (err) {
+        setEvents(remoteEvents.map((e) => ({ ...e, date: e.date?.slice(0,10) })));
+        setClubs(remoteClubs.map((c) => ({ id: c.id, name: c.name, color: c.color, enabled: c.enabled })));
+      } catch {
         // fallback to empty lists
         setEvents([]);
         setClubs([]);
-      } finally {
-        setLoadingData(false);
       }
     };
     load();
@@ -67,13 +64,7 @@ const CalendarApp: React.FC = () => {
     }
   }, [theme]);
 
-  const handleEditEvent = useCallback((eventId: string, updatedEvent: Partial<Event>) => {
-    setEvents(prev =>
-      prev.map(event =>
-        event.id === eventId ? { ...event, ...updatedEvent } : event
-      )
-    );
-  }, []);
+  // handleEditEvent removed: editing happens in admin panel only
 
   return (
     <ClubProvider initialClubs={clubs}>
@@ -113,11 +104,12 @@ const CalendarApp: React.FC = () => {
             >{showFilters ? 'Close Filters' : 'Filters'}</button>
             <button
               onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
-              className={`rounded-full px-4 py-2 shadow-lg text-xs font-medium border ${theme === 'light' ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100' : 'bg-[#16181a] border-[#2a2c2e] text-gray-200 hover:bg-[#1f2225]'}`}
+              className={`rounded-full p-2 shadow-lg text-xs font-medium border ${theme === 'light' ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100' : 'bg-[#16181a] border-[#2a2c2e] text-gray-200 hover:bg-[#1f2225]'}`}
               aria-label="Toggle theme"
-            >{theme === 'light' ? 'Dark' : 'Light'}</button>
+            >{theme === 'light' ? <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M21.752 15.002A9.718 9.718 0 0 1 12.999 22C7.476 22 3 17.523 3 12a9.718 9.718 0 0 1 6.998-8.752.75.75 0 0 1 .92.92A8.218 8.218 0 0 0 11 12c0 4.075 3.06 7.437 6.832 7.832a.75.75 0 0 1 .92.92Z"/></svg> : <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0 4a.75.75 0 0 1-.75-.75v-1.5a.75.75 0 0 1 1.5 0v1.5A.75.75 0 0 1 12 22Zm0-16a.75.75 0 0 1-.75-.75V3.75a.75.75 0 0 1 1.5 0v1.5A.75.75 0 0 1 12 6Z"/></svg>}</button>
           </div>
         </div>
+        <Toaster />
         {/* Admin UI moved to /glenforestsacadmindash */}
 
         {selectedEvent && (

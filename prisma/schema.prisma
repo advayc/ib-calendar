@@ -3,9 +3,11 @@
 // Use SQLite for quick local setup; can switch to PostgreSQL later
 // To migrate: npx prisma migrate dev --name init
 
+// Use SQLite for local development by default. If you want to use PostgreSQL,
+// set DATABASE_URL in your environment and update this file accordingly.
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 generator client {

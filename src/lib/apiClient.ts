@@ -5,7 +5,6 @@ export interface ApiClientOptions {
 
 const defaultBase = '';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export class ApiClient {
   private base: string;
   private token?: string | null;
@@ -22,34 +21,46 @@ export class ApiClient {
     return h;
   }
 
-  async get(path: string) {
+  async get<T = unknown>(path: string): Promise<T> {
     const res = await fetch(this.base + path, { cache: 'no-store', headers: this.headers() });
     if (!res.ok) throw new Error(await res.text());
-    return res.json();
+    return res.json() as Promise<T>;
   }
-  async post(path: string, body: any) {
+
+  async post<T = unknown, B = unknown>(path: string, body?: B): Promise<T> {
     const res = await fetch(this.base + path, { method: 'POST', headers: this.headers(), body: JSON.stringify(body) });
     if (!res.ok) {
-      if (res.status === 401) throw new Error('Unauthorized');
-      throw new Error(await res.text());
+      const t = await res.text().catch(() => '');
+      const msg = t || res.statusText || `HTTP ${res.status}`;
+      const err = new Error(msg) as Error & { status?: number };
+      err.status = res.status;
+      throw err;
     }
-    return res.json();
+    return res.json() as Promise<T>;
   }
-  async patch(path: string, body: any) {
+
+  async patch<T = unknown, B = unknown>(path: string, body?: B): Promise<T> {
     const res = await fetch(this.base + path, { method: 'PATCH', headers: this.headers(), body: JSON.stringify(body) });
     if (!res.ok) {
-      if (res.status === 401) throw new Error('Unauthorized');
-      throw new Error(await res.text());
+      const t = await res.text().catch(() => '');
+      const msg = t || res.statusText || `HTTP ${res.status}`;
+      const err = new Error(msg) as Error & { status?: number };
+      err.status = res.status;
+      throw err;
     }
-    return res.json();
+    return res.json() as Promise<T>;
   }
-  async delete(path: string) {
+
+  async delete<T = unknown>(path: string): Promise<T> {
     const res = await fetch(this.base + path, { method: 'DELETE', headers: this.headers(false) });
     if (!res.ok) {
-      if (res.status === 401) throw new Error('Unauthorized');
-      throw new Error(await res.text());
+      const t = await res.text().catch(() => '');
+      const msg = t || res.statusText || `HTTP ${res.status}`;
+      const err = new Error(msg) as Error & { status?: number };
+      err.status = res.status;
+      throw err;
     }
-    return res.json();
+    return res.json() as Promise<T>;
   }
 }
 
