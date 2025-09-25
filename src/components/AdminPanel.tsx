@@ -95,7 +95,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
           : undefined,
       };
       try {
-        onAddEvent(base);
+          onAddEvent(base);
         toast.success('Event added');
         setNewEvent({
         title: '',
@@ -111,7 +111,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
         count: '',
       });
       } catch (err) {
-        toast.error('Failed to add event');
+          toast.error('Failed to add event');
       }
     }
   };

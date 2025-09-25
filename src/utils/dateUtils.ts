@@ -9,7 +9,7 @@ import {
   isToday,
   addMonths,
   subMonths,
-  isSameDay
+  
 } from 'date-fns';
 import { CalendarDay, Event } from '@/types';
 
@@ -55,7 +55,7 @@ export const getCalendarDays = (date: Date, events: Event[]): CalendarDay[] => {
   return days.map(day => {
     const dayStart = normalizeDateOnly(day);
     const dayEvents = events.filter(event => {
-      const evDate = parseEventDateAsLocal((event as any).date);
+      const evDate = parseEventDateAsLocal(event.date);
       if (!evDate) return false;
       return evDate.getTime() === dayStart.getTime();
     });

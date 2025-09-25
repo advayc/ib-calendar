@@ -7,7 +7,7 @@ import ClubFilter from '@/components/ClubFilter';
 import { ClubProvider } from '@/context/ClubContext';
 import { Event, Club } from '@/types';
 import { apiClient } from '@/lib/apiClient';
-import toast, { Toaster } from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
 // LoginForm handled on the secret admin page
 
 const CalendarApp: React.FC = () => {
