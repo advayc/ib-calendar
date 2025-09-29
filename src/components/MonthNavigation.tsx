@@ -23,7 +23,7 @@ const MonthNavigation: React.FC<MonthNavigationProps> = ({
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
   return (
-    <div className={`flex items-center justify-between h-14 px-3 sm:px-4 select-none border-b ${isLight ? 'bg-white border-gray-200' : 'bg-[#0d0e0f] border-[#1e2022]'}`}>
+    <div className={`flex items-center justify-between h-14 px-3 sm:px-4 select-none border-b ${isLight ? 'bg-white border-gray-200' : 'bg-[#0D0E0F] border-[#1e2022]'}`}>
       <div className="flex items-center gap-2">
         <button
           onClick={onPreviousMonth}

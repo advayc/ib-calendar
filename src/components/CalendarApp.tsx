@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import Calendar from '@/components/Calendar';
@@ -68,9 +68,11 @@ const CalendarApp: React.FC = () => {
 
   return (
     <ClubProvider initialClubs={clubs}>
-  <div suppressHydrationWarning className={`min-h-screen md:h-screen flex flex-col md:flex-row text-sm transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#0b0c0d] text-gray-100'}`}>
+  <div suppressHydrationWarning className={`min-h-screen flex flex-col md:flex-row text-sm transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#101215] text-gray-200 border-r border-[#1e2022]'}`}>
         {/* Sidebar (desktop) / Drawer (mobile) */}
-        <div className={`md:w-[250px] md:flex-shrink-0 md:h-full md:relative fixed top-0 left-0 h-full w-[250px] transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 bg-inherit z-40 transition-transform duration-300`}> 
+        <div
+          className={`md:w-[250px] md:flex-shrink-0 md:h-auto md:static fixed top-0 left-0 h-full w-[250px] transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 ${theme === 'light' ? 'bg-gray-50' : 'bg-[#101215]'} z-40 md:z-auto transition-transform duration-300 overflow-hidden`}
+        > 
           <ClubFilter activeDate={activeDate} onChangeDate={(d) => { setActiveDate(d); if (showFilters) setShowFilters(false); }} theme={theme} />
         </div>
 
