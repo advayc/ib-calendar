@@ -14,7 +14,14 @@ const AdminPage: React.FC = () => {
   const [clubs, setClubs] = useState<Club[]>([]);
   // loading state removed (not used)
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [theme, setTheme] = useState<'light'|'dark'>(() => (typeof window !== 'undefined' ? (localStorage.getItem('gfs-theme') as 'light'|'dark') || 'light' : 'light'));
+  // Initialize to a stable value for SSR to avoid hydration mismatch; hydrate from localStorage after mount
+  const [theme, setTheme] = useState<'light'|'dark'>('light');
+  useEffect(() => {
+    try {
+      const saved = (localStorage.getItem('gfs-theme') as 'light'|'dark') || 'light';
+      setTheme(saved);
+    } catch {}
+  }, []);
 
   useEffect(() => {
     try {
@@ -105,7 +112,7 @@ const AdminPage: React.FC = () => {
   }, [adminToken]);
 
   return (
-    <div className={`min-h-screen p-4 sm:p-6 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#0b0c0d] text-gray-100'}`}>
+    <div suppressHydrationWarning className={`min-h-screen p-4 sm:p-6 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#0b0c0d] text-gray-100'}`}>
       <div className="max-w-5xl mx-auto">
         <h1 className="text-xl sm:text-2xl font-semibold mb-4">Admin Dashboard (Secret)</h1>
         {!adminToken ? (
@@ -117,8 +124,26 @@ const AdminPage: React.FC = () => {
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
               <div className="flex flex-wrap gap-2">
-                <button onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')} className="px-3 py-1 rounded border text-sm">Toggle theme</button>
-                <button onClick={handleLogout} className="px-3 py-1 rounded border text-sm">Logout</button>
+                <button
+                  onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
+                  className={`px-3 py-1 rounded border text-sm transition-colors ${
+                    theme === 'light'
+                      ? 'border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400'
+                      : 'border-[#2a2c2f] text-gray-200 hover:bg-[#1a1c1e] hover:border-[#3a3c3e]'
+                  }`}
+                >
+                  Toggle theme
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className={`px-3 py-1 rounded border text-sm transition-colors ${
+                    theme === 'light'
+                      ? 'border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400'
+                      : 'border-[#2a2c2f] text-gray-200 hover:bg-[#1a1c1e] hover:border-[#3a3c3e]'
+                  }`}
+                >
+                  Logout
+                </button>
               </div>
             </div>
             <AdminPanel events={events} clubs={clubs} onAddEvent={handleAddEvent} onDeleteEvent={handleDeleteEvent} onUpdateClub={handleUpdateClub} onUpdateEvent={handleUpdateEvent} onAddClub={handleAddClub} onDeleteClub={handleDeleteClub} theme={theme} />
