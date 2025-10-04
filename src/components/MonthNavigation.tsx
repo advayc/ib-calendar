@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ChevronLeft, ChevronRight, Moon, Sun } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Moon, Sun, PanelLeftClose } from 'lucide-react';
 import { formatMonthYear } from '@/utils/dateUtils';
 import { useRouter } from 'next/navigation';
 import ViewSelector from './ViewSelector';
@@ -12,6 +12,7 @@ interface MonthNavigationProps {
   onNextMonth: () => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
+  onToggleSidebar?: () => void;
 }
 
 const MonthNavigation: React.FC<MonthNavigationProps> = ({
@@ -19,7 +20,8 @@ const MonthNavigation: React.FC<MonthNavigationProps> = ({
   onPreviousMonth,
   onNextMonth,
   theme = 'light',
-  onToggleTheme
+  onToggleTheme,
+  onToggleSidebar
 }) => {
   const isLight = theme === 'light';
   const [mounted, setMounted] = React.useState(false);
@@ -36,6 +38,15 @@ const MonthNavigation: React.FC<MonthNavigationProps> = ({
   return (
     <div className={`flex items-center justify-between h-14 px-3 sm:px-4 select-none border-b ${isLight ? 'bg-white border-gray-200' : 'bg-[#0D0E0F] border-[#1e2022]'}`}>
       <div className="flex items-center gap-2">
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className={`h-8 w-8 flex items-center justify-center rounded-md transition-colors border ${isLight ? 'bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 border-gray-200' : 'bg-[#2A2A2A] hover:bg-[#252729] text-gray-400 hover:text-gray-200 border-[#2a2c2e]'}`}
+            aria-label="Toggle sidebar"
+          >
+            <PanelLeftClose className="w-4 h-4" />
+          </button>
+        )}
         <button
           onClick={onPreviousMonth}
           className={`h-8 w-8 flex items-center justify-center rounded-md transition-colors border ${isLight ? 'bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 border-gray-200' : 'bg-[#2A2A2A] hover:bg-[#252729] text-gray-400 hover:text-gray-200 border-[#2a2c2e]'}`}

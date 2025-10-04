@@ -175,6 +175,7 @@ const CalendarApp: React.FC = () => {
             onSelectEvent={(e) => setSelectedEvent(e)}
             theme={theme}
             onToggleTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+            onToggleSidebar={() => setSidebarCollapsed(s => !s)}
           />
 
           {/* Floating action buttons (mobile) */}

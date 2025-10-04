@@ -15,9 +15,10 @@ interface CalendarProps {
   onSelectEvent?: (e: Event) => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
+  onToggleSidebar?: () => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDateChange, onSelectEvent, theme = 'light', onToggleTheme }) => {
+const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDateChange, onSelectEvent, theme = 'light', onToggleTheme, onToggleSidebar }) => {
   const [internalDate, setInternalDate] = useState(new Date());
   const currentDate = controlledDate ?? internalDate;
   const setCurrentDate = (d: Date) => {
@@ -60,6 +61,7 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
         onNextMonth={handleNextMonth}
         theme={theme}
         onToggleTheme={onToggleTheme}
+        onToggleSidebar={onToggleSidebar}
       />
       
       <div className="flex-1 flex flex-col overflow-hidden">
