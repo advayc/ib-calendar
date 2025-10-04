@@ -12,10 +12,11 @@ interface DayViewProps {
   clubs: Club[];
   currentDate: Date;
   onDateChange: (d: Date) => void;
+  onSelectEvent?: (event: Event) => void;
   theme?: 'light' | 'dark';
 }
 
-const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateChange, theme = 'light' }) => {
+const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateChange, onSelectEvent, theme = 'light' }) => {
   const { enabledClubIds, prioritizedClubIds } = useClubs();
 
   const clubsMap = useMemo(() => {
@@ -109,6 +110,7 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
     }
     return slots;
   }, []);
+  const EVENT_TOP_OFFSET = 8; // breathing room from top of time cell
 
   return (
     <div className={`flex-1 flex flex-col overflow-hidden ${isLight ? 'bg-white' : 'bg-[#0d0e0f]'}`}>
@@ -186,7 +188,7 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
                   key={event.id}
                   style={{
                     position: 'absolute',
-                    top: `${topPosition}px`,
+                    top: `${topPosition + EVENT_TOP_OFFSET}px`,
                     left: '8px',
                     right: '8px',
                   }}
@@ -196,6 +198,7 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
                     club={club}
                     theme={theme}
                     isPrioritized={prioritizedClubIds.includes(event.clubId)}
+                    onClick={() => onSelectEvent?.(event)}
                   />
                 </div>
               );
@@ -205,7 +208,7 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
             {isDayToday && currentTimePosition !== null && (
               <div
                 className="absolute left-0 right-0 pointer-events-none z-10"
-                style={{ top: `${currentTimePosition}px` }}
+                style={{ top: `${currentTimePosition + EVENT_TOP_OFFSET}px` }}
               >
                 <div className="flex items-center">
                   <div className="w-2 h-2 rounded-full bg-[#FF3B30] ml-2"></div>

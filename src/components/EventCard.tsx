@@ -17,11 +17,11 @@ const EventCard: React.FC<EventCardProps> = React.memo(({ event, club, onClick, 
   const timeDisplay = useMemo(() => formatEventTime12h(event.time), [event.time]);
 
   const isLight = theme === 'light';
-  // Make SAC events larger and more prominent
+  // SAC events should be same size but bolded
   const isSAC = club.name.toLowerCase().includes('sac');
-  const textSize = isSAC ? 'text-[13px]' : 'text-[11px]';
-  const minHeight = isSAC ? 'min-h-[20px]' : 'min-h-[16px]';
-  const padding = isSAC ? 'px-2 py-1.5' : 'px-1 py-0.5';
+  const textSize = 'text-[11px]';
+  const minHeight = 'min-h-[16px]';
+  const padding = 'px-1 pt-1 pb-0.5';
   
   return (
     <button
@@ -30,7 +30,7 @@ const EventCard: React.FC<EventCardProps> = React.memo(({ event, club, onClick, 
       className={`group relative w-full flex items-center ${textSize} leading-tight cursor-pointer select-none rounded-sm ${minHeight} hover:brightness-105 transition ${isLight ? 'text-gray-800' : 'text-gray-200'} ${padding}`}
       title={`${event.title}${event.time ? ` - ${event.time}` : ''}${event.location ? ` @ ${event.location}` : ''}${event.description ? `\n${event.description}` : ''}`}
       style={{ 
-        backgroundColor: `${club.color}${isSAC ? '44' : '33'}`, // More opaque for SAC
+        backgroundColor: `${club.color}33`,
       }}
     >
       <span className={`truncate flex-1 ${isPrioritized || isSAC ? 'font-bold' : 'font-medium'} ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>{event.title}</span>
@@ -40,7 +40,7 @@ const EventCard: React.FC<EventCardProps> = React.memo(({ event, club, onClick, 
         </span>
       )}
       {timeDisplay && (
-        <span className={`ml-2 ${isSAC ? 'text-[11px]' : 'text-[10px]'} tabular-nums ${isLight ? 'text-gray-500' : 'text-gray-300'}`}>
+        <span className={`ml-2 text-[10px] tabular-nums ${isLight ? 'text-gray-500' : 'text-gray-300'}`}>
           {timeDisplay}
         </span>
       )}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Calendar from '@/components/Calendar';
 import ClubFilter from '@/components/ClubFilter';
 // AdminPanel moved to a secret route; keep main app lean
@@ -9,6 +9,7 @@ import { Event, Club } from '@/types';
 import { apiClient } from '@/lib/apiClient';
 import { Toaster } from 'react-hot-toast';
 import { PanelLeftOpen } from 'lucide-react';
+import EventDetailsModal from './EventDetailsModal';
 // LoginForm handled on the secret admin page
 
 const CalendarApp: React.FC = () => {
@@ -34,6 +35,11 @@ const CalendarApp: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // Mobile sidebar (club filter) visibility
   const [showFilters, setShowFilters] = useState(false);
+  // Dragging state for desktop sidebar (allows pushing left to hide)
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
+  const startXRef = useRef<number>(0);
+  const draggingRef = useRef<boolean>(false);
+  const [dragOffset, setDragOffset] = useState(0); // negative when dragging left
 
   // Initial load from backend (fallback to static on failure)
   useEffect(() => {
@@ -67,6 +73,43 @@ const CalendarApp: React.FC = () => {
     }
   }, [theme]);
 
+  // Drag handlers for sidebar drag-to-collapse
+  useEffect(() => {
+    function onPointerMove(e: PointerEvent) {
+      if (!draggingRef.current) return;
+      const dx = e.clientX - startXRef.current;
+      // only allow dragging left (negative dx) up to sidebar width
+      const width = sidebarRef.current?.offsetWidth || 250;
+      const clamped = Math.max(-width, Math.min(0, dx));
+      setDragOffset(clamped);
+    }
+
+    function endDrag() {
+      if (!draggingRef.current) return;
+      draggingRef.current = false;
+      const width = sidebarRef.current?.offsetWidth || 250;
+      // if dragged left more than 35% of width, collapse. Otherwise snap back open.
+      if (Math.abs(dragOffset) > width * 0.35) {
+        setSidebarCollapsed(true);
+      }
+      setDragOffset(0);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', endDrag);
+      window.removeEventListener('pointercancel', endDrag);
+    }
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', endDrag);
+      window.removeEventListener('pointercancel', endDrag);
+    };
+  // dragOffset intentionally not added to deps because we only read its current value in endDrag closure via state; it's fine to re-register on mount only
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // handleEditEvent removed: editing happens in admin panel only
 
   return (
@@ -74,17 +117,28 @@ const CalendarApp: React.FC = () => {
   <div suppressHydrationWarning className={`min-h-screen flex flex-col md:flex-row text-sm transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#101215] text-gray-200 border-r border-[#1e2022]'}`}>
         {/* Sidebar (desktop) / Drawer (mobile) */}
         <div
+          ref={sidebarRef}
           className={`md:flex-shrink-0 md:h-auto md:static fixed top-0 left-0 h-full transform ${sidebarCollapsed ? 'md:w-0 -translate-x-full md:-translate-x-0' : 'md:w-[250px] translate-x-0'} ${showFilters ? 'translate-x-0' : 'md:translate-x-0 -translate-x-full'} ${theme === 'light' ? 'bg-gray-50' : 'bg-[#101215]'} z-40 md:z-auto transition-all duration-300 overflow-hidden relative`}
-          style={{ width: sidebarCollapsed ? (typeof window !== 'undefined' && window.innerWidth >= 768 ? '0' : '250px') : '250px' }}
+          style={{
+            width: sidebarCollapsed ? (typeof window !== 'undefined' && window.innerWidth >= 768 ? '0' : '250px') : '250px',
+            // Only apply inline translate while actively dragging; otherwise let CSS classes handle collapsed state
+            transform: dragOffset !== 0 ? `translateX(${dragOffset}px)` : undefined,
+          }}
         > 
           {!sidebarCollapsed && (
             <>
               <ClubFilter activeDate={activeDate} onChangeDate={(d) => { setActiveDate(d); if (showFilters) setShowFilters(false); }} theme={theme} />
               {/* Drag handle on the right edge */}
               <div 
-                className="hidden md:block absolute top-0 right-0 w-1 h-full cursor-ew-resize hover:bg-blue-500 transition-colors"
-                onClick={() => setSidebarCollapsed(true)}
-                title="Click to hide sidebar"
+                className="hidden md:block absolute top-0 right-0 w-2 h-full cursor-ew-resize hover:bg-blue-500 transition-colors"
+                onPointerDown={(e) => {
+                  // start dragging
+                  // only left-button or touch
+                  if ('button' in e && e.button !== 0) return;
+                  draggingRef.current = true;
+                  startXRef.current = e.clientX;
+                }}
+                title="Drag to hide sidebar"
               />
             </>
           )}
@@ -141,35 +195,7 @@ const CalendarApp: React.FC = () => {
         {/* Admin UI moved to /glenforestsacadmindash */}
 
         {selectedEvent && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setSelectedEvent(null)}>
-              <div
-                className={`w-full max-w-md mx-4 rounded-lg p-6 shadow-lg border ${theme === 'light' ? 'bg-white border-gray-200 text-gray-900' : 'bg-[#14161a] border-[#1e2022] text-gray-100'}`}
-                onClick={e => e.stopPropagation()}
-            >
-              <h3 className="text-lg font-semibold mb-2">{selectedEvent.title}</h3>
-              {(() => {
-                const club = clubs.find(c => c.id === selectedEvent.clubId);
-                return club && (
-                  <div className="flex items-center gap-2 mb-2">
-                    <div
-                      className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: club.color || '#ffffff' }}
-                    ></div>
-                    <p className={`text-sm font-medium ${theme==='light' ? 'text-gray-700' : 'text-gray-300'}`}>{club.name}</p>
-                  </div>
-                );
-              })()}
-              {selectedEvent.time && <p className={`text-sm mb-1 font-mono ${theme==='light' ? 'opacity-90 text-gray-700' : 'opacity-80'}`}>Time: {selectedEvent.time}</p>}
-              {selectedEvent.location && <p className={`text-sm mb-1 ${theme==='light' ? 'opacity-90 text-gray-700' : 'opacity-80'}`}>Location: {selectedEvent.location}</p>}
-              {selectedEvent.description && <p className="text-sm mb-4 whitespace-pre-wrap leading-relaxed">{selectedEvent.description}</p>}
-                <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => setSelectedEvent(null)}
-                  className={`${theme==='light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-900' : 'bg-[#222426] hover:bg-[#2a2c2f] text-gray-100'} px-4 py-2 rounded-md text-sm font-medium`}
-                >Close</button>
-              </div>
-            </div>
-          </div>
+          <EventDetailsModal event={selectedEvent} clubs={clubs} theme={theme} onClose={() => setSelectedEvent(null)} />
         )}
 
         {/* Admin Panel */}

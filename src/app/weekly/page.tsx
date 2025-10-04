@@ -11,6 +11,7 @@ import { apiClient } from '@/lib/apiClient';
 import { Toaster } from 'react-hot-toast';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import EventDetailsModal from '@/components/EventDetailsModal';
 
 type ViewType = 'day' | 'week' | 'month';
 
@@ -24,6 +25,7 @@ const WeeklyCalendarPage: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('week');
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -111,6 +113,7 @@ const WeeklyCalendarPage: React.FC = () => {
               clubs={clubs}
               currentDate={activeDate}
               onDateChange={setActiveDate}
+              onSelectEvent={(e) => setSelectedEvent(e)}
               theme={theme}
             />
           ) : (
@@ -119,12 +122,17 @@ const WeeklyCalendarPage: React.FC = () => {
               clubs={clubs}
               currentDate={activeDate}
               onDateChange={setActiveDate}
+              onSelectEvent={(e) => setSelectedEvent(e)}
               theme={theme}
             />
           )}
         </div>
 
         <Toaster />
+
+        {selectedEvent && (
+          <EventDetailsModal event={selectedEvent} clubs={clubs} theme={theme} onClose={() => setSelectedEvent(null)} />
+        )}
       </div>
     </ClubProvider>
   );

@@ -12,10 +12,11 @@ interface WeekViewProps {
   clubs: Club[];
   currentDate: Date;
   onDateChange: (d: Date) => void;
+  onSelectEvent?: (event: Event) => void;
   theme?: 'light' | 'dark';
 }
 
-const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateChange, theme = 'light' }) => {
+const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateChange, onSelectEvent, theme = 'light' }) => {
   const { enabledClubIds, prioritizedClubIds } = useClubs();
 
   const clubsMap = useMemo(() => {
@@ -123,6 +124,8 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
     }
     return slots;
   }, []);
+  // Small visual offset so events don't sit flush against the top of the grid
+  const EVENT_TOP_OFFSET = 8;
 
   return (
     <div className={`flex-1 flex flex-col overflow-hidden ${isLight ? 'bg-white' : 'bg-[#0d0e0f]'}`}>
@@ -233,7 +236,7 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
                           key={event.id}
                           style={{
                             position: 'absolute',
-                            top: `${topPosition}px`,
+                            top: `${topPosition + EVENT_TOP_OFFSET}px`,
                             left: '4px',
                             right: '4px',
                           }}
@@ -243,6 +246,7 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
                             club={club}
                             theme={theme}
                             isPrioritized={prioritizedClubIds.includes(event.clubId)}
+                            onClick={() => onSelectEvent?.(event)}
                           />
                         </div>
                       );
