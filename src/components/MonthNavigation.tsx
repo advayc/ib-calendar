@@ -3,6 +3,8 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, Moon, Sun } from 'lucide-react';
 import { formatMonthYear } from '@/utils/dateUtils';
+import { useRouter } from 'next/navigation';
+import ViewSelector from './ViewSelector';
 
 interface MonthNavigationProps {
   currentDate: Date;
@@ -21,7 +23,16 @@ const MonthNavigation: React.FC<MonthNavigationProps> = ({
 }) => {
   const isLight = theme === 'light';
   const [mounted, setMounted] = React.useState(false);
+  const router = useRouter();
+  
   React.useEffect(() => setMounted(true), []);
+  
+  const handleViewChange = (view: 'day' | 'week' | 'month') => {
+    if (view !== 'month') {
+      router.push('/weekly');
+    }
+  };
+  
   return (
     <div className={`flex items-center justify-between h-14 px-3 sm:px-4 select-none border-b ${isLight ? 'bg-white border-gray-200' : 'bg-[#0D0E0F] border-[#1e2022]'}`}>
       <div className="flex items-center gap-2">
@@ -44,6 +55,11 @@ const MonthNavigation: React.FC<MonthNavigationProps> = ({
         </h1>
       </div>
       <div className="flex items-center gap-2">
+        <ViewSelector
+          currentView="month"
+          onViewChange={handleViewChange}
+          theme={theme}
+        />
         {onToggleTheme && (
           <button
             onClick={onToggleTheme}

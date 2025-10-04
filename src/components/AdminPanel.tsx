@@ -1,9 +1,11 @@
  'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Calendar as CalendarIcon, Clock, Repeat, PlusCircle, Save, Trash2, ExternalLink, Star } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Repeat, PlusCircle, Save, Trash2, ExternalLink } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { Event, Club } from '@/types';
+import EventFilters, { EventFilterState } from './EventFilters';
+import { applyEventFilters } from '@/utils/eventFilters';
 
 interface AdminPanelProps {
   events: Event[];
@@ -71,18 +73,31 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
     until: '',
     count: ''
   });
-  const [eventSearch, setEventSearch] = useState('');
+  
+  // Event filters state
+  const [eventFilters, setEventFilters] = useState<EventFilterState>({
+    searchText: '',
+    clubIds: [],
+    dateRange: 'all',
+    customDateFrom: '',
+    customDateTo: '',
+    showAllDay: true,
+    showRecurring: true,
+    showNonRecurring: true,
+    sortBy: 'date-asc'
+  });
 
   const displayedEvents = useMemo(() => {
-    const q = eventSearch.trim().toLowerCase();
-    const filtered = q ? events.filter(e => e.title.toLowerCase().includes(q)) : events.slice();
+    // Apply filters first
+    const filtered = applyEventFilters(events, eventFilters, clubs);
+    
+    // Group recurring events (show only first occurrence)
     const seriesMap = new Map<string, Event[]>();
     const singles: Event[] = [];
     filtered.forEach(ev => {
-      const hasRec = !!(ev.recurrence || ev.recurrenceFrequency);
-      if (hasRec) {
-        const freq = ev.recurrence?.frequency || ev.recurrenceFrequency || '';
-        const key = `${ev.title}||${ev.clubId}||${freq}`;
+      const hasRec = !!(ev.recurrenceGroupId || ev.recurrenceFrequency);
+      if (hasRec && ev.recurrenceGroupId) {
+        const key = ev.recurrenceGroupId;
         const arr = seriesMap.get(key) || [];
         arr.push(ev);
         seriesMap.set(key, arr);
@@ -90,9 +105,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
         singles.push(ev);
       }
     });
-    const seriesFirst = Array.from(seriesMap.values()).map(group => group.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0]);
-    return [...singles, ...seriesFirst].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [events, eventSearch]);
+    const seriesFirst = Array.from(seriesMap.values()).map(group => 
+      group.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0]
+    );
+    
+    return [...singles, ...seriesFirst];
+  }, [events, eventFilters, clubs]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -417,19 +435,24 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
 
       <div className={`p-4 rounded-lg ${sectionCard}`}>
         <h3 className={`text-lg font-medium mb-3 ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>Existing Events</h3>
-        <div className="mb-2">
-          <input
-            type="text"
-            placeholder="Search events..."
-            value={eventSearch}
-            onChange={(e) => setEventSearch(e.target.value)}
-            className={`${fieldClass()} mb-2`} 
-          />
-        </div>
+        
+        <EventFilters
+          filters={eventFilters}
+          clubs={clubs}
+          onFilterChange={setEventFilters}
+          theme={theme}
+          compact={true}
+        />
+        
         <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-          {displayedEvents.map(event => {
-            const club = clubs.find(c => c.id === event.clubId);
-            return (
+          {displayedEvents.length === 0 ? (
+            <div className={`text-center py-8 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
+              No events match your filters
+            </div>
+          ) : (
+            displayedEvents.map(event => {
+              const club = clubs.find(c => c.id === event.clubId);
+              return (
               <div key={event.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-md transition-colors ${listItem}`}>
                 {editingEvent === event.id ? (
                   <div className="flex-1 space-y-2">
@@ -512,14 +535,23 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
                   <>
                     <div className="flex-1 min-w-0 mb-2 sm:mb-0 flex items-center gap-2">
                       <div className="flex-1 min-w-0">
-                        <div className={`font-medium truncate ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>{event.title}</div>
+                        <div className={`font-medium truncate flex items-center gap-2 ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>
+                          {event.title}
+                          {(event.recurrenceFrequency || event.recurrenceGroupId) && (
+                            <span title="Recurring event">
+                              <Repeat className="w-4 h-4 text-blue-500" />
+                            </span>
+                          )}
+                        </div>
                         <div className={`text-sm ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{mounted ? new Date(event.date).toDateString() : ''} {event.time}</div>
                         {event.location && <div className={`text-xs ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>📍 {event.location}</div>}
                         {club && <div className={`text-xs mt-0.5 ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>{club.name}</div>}
+                        {(event.recurrenceFrequency || event.recurrenceGroupId) && (
+                          <div className={`text-xs mt-0.5 ${isLight ? 'text-blue-600' : 'text-blue-400'}`}>
+                            🔄 Recurring ({event.recurrenceFrequency?.toLowerCase() || 'series'})
+                          </div>
+                        )}
                       </div>
-                      {event.recurrence && (
-                        <Star className="w-7 h-7 text-yellow-400 opacity-80" fill="#fde68a" stroke="#f59e42" />
-                      )}
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -544,7 +576,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
                         Edit
                       </button>
                       <button
-                        onClick={() => { if (confirm('Delete event?')) { onDeleteEvent(event.id); toast.success('Deleted event'); } }}
+                        onClick={() => {
+                          const isRecurring = event.recurrenceGroupId || event.recurrenceFrequency;
+                          const confirmMsg = isRecurring
+                            ? 'This is a recurring event. Deleting will remove ALL occurrences in this series. Continue?'
+                            : 'Delete event?';
+                          if (confirm(confirmMsg)) {
+                            onDeleteEvent(event.id);
+                            toast.success(isRecurring ? 'Deleted recurring series' : 'Deleted event');
+                          }
+                        }}
                         className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors flex-shrink-0 flex items-center gap-2"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -554,7 +595,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDe
                 )}
               </div>
             );
-          })}
+          })
+          )}
         </div>
       </div>
       <Toaster />

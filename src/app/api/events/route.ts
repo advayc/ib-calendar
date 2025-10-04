@@ -54,6 +54,8 @@ export async function POST(req: NextRequest) {
       let current = new Date(date);
       let count = 0;
       const until = recurrence.until ? new Date(recurrence.until) : undefined;
+      // Generate a unique group ID for this recurring series
+      const groupId = `rec-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
       while (count < max) {
         if (until && current > until) break;
         const e = await prisma.event.create({
@@ -67,7 +69,8 @@ export async function POST(req: NextRequest) {
             recurrenceFrequency: 'WEEKLY',
             recurrenceInterval: interval,
             recurrenceCount: recurrence.count,
-            recurrenceUntil: recurrence.until ? new Date(recurrence.until) : undefined
+            recurrenceUntil: recurrence.until ? new Date(recurrence.until) : undefined,
+            recurrenceGroupId: groupId
           }
         });
         created.push(e);
@@ -106,8 +109,17 @@ export async function DELETE(req: NextRequest) {
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
   try {
-    await prisma.event.delete({ where: { id } });
-    return NextResponse.json({ success: true });
+    // Check if this event is part of a recurring series
+    const event = await prisma.event.findUnique({ where: { id } });
+    if (event?.recurrenceGroupId) {
+      // Delete all events in the same recurring series
+      await prisma.event.deleteMany({ where: { recurrenceGroupId: event.recurrenceGroupId } });
+      return NextResponse.json({ success: true, deletedSeries: true });
+    } else {
+      // Delete single event
+      await prisma.event.delete({ where: { id } });
+      return NextResponse.json({ success: true });
+    }
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

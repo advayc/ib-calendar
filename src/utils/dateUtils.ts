@@ -1,3 +1,20 @@
+// Format event time as 12-hour (AM/PM), fallback to original if parse fails
+export const formatEventTime12h = (time?: string): string => {
+  if (!time) return '';
+  // Try to parse as HH:mm or H:mm
+  const match = time.match(/^(\d{1,2}):(\d{2})$/);
+  if (match) {
+    let hour = parseInt(match[1], 10);
+    const min = match[2];
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    if (hour === 0) hour = 12;
+    else if (hour > 12) hour -= 12;
+    return `${hour}:${min} ${ampm}`;
+  }
+  // If already has AM/PM or not a time, return as is
+  if (/am|pm/i.test(time)) return time;
+  return time;
+};
 import { 
   format, 
   startOfMonth, 

@@ -27,6 +27,7 @@ export interface Event {
   recurrenceInterval?: number;
   recurrenceCount?: number;
   recurrenceUntil?: string;
+  recurrenceGroupId?: string; // Group ID to identify all events in the same recurring series
 }
 
 export interface CalendarDay {

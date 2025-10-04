@@ -8,6 +8,7 @@ import { ClubProvider } from '@/context/ClubContext';
 import { Event, Club } from '@/types';
 import { apiClient } from '@/lib/apiClient';
 import { Toaster } from 'react-hot-toast';
+import { PanelLeftOpen } from 'lucide-react';
 // LoginForm handled on the secret admin page
 
 const CalendarApp: React.FC = () => {
@@ -29,6 +30,8 @@ const CalendarApp: React.FC = () => {
     setTheme(saved);
   }, []);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  // Sidebar toggle for desktop
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // Mobile sidebar (club filter) visibility
   const [showFilters, setShowFilters] = useState(false);
 
@@ -71,9 +74,32 @@ const CalendarApp: React.FC = () => {
   <div suppressHydrationWarning className={`min-h-screen flex flex-col md:flex-row text-sm transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#101215] text-gray-200 border-r border-[#1e2022]'}`}>
         {/* Sidebar (desktop) / Drawer (mobile) */}
         <div
-          className={`md:w-[250px] md:flex-shrink-0 md:h-auto md:static fixed top-0 left-0 h-full w-[250px] transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 ${theme === 'light' ? 'bg-gray-50' : 'bg-[#101215]'} z-40 md:z-auto transition-transform duration-300 overflow-hidden`}
+          className={`md:flex-shrink-0 md:h-auto md:static fixed top-0 left-0 h-full transform ${sidebarCollapsed ? 'md:w-0 -translate-x-full md:-translate-x-0' : 'md:w-[250px] translate-x-0'} ${showFilters ? 'translate-x-0' : 'md:translate-x-0 -translate-x-full'} ${theme === 'light' ? 'bg-gray-50' : 'bg-[#101215]'} z-40 md:z-auto transition-all duration-300 overflow-hidden relative`}
+          style={{ width: sidebarCollapsed ? (typeof window !== 'undefined' && window.innerWidth >= 768 ? '0' : '250px') : '250px' }}
         > 
-          <ClubFilter activeDate={activeDate} onChangeDate={(d) => { setActiveDate(d); if (showFilters) setShowFilters(false); }} theme={theme} />
+          {!sidebarCollapsed && (
+            <>
+              <ClubFilter activeDate={activeDate} onChangeDate={(d) => { setActiveDate(d); if (showFilters) setShowFilters(false); }} theme={theme} />
+              {/* Drag handle on the right edge */}
+              <div 
+                className="hidden md:block absolute top-0 right-0 w-1 h-full cursor-ew-resize hover:bg-blue-500 transition-colors"
+                onClick={() => setSidebarCollapsed(true)}
+                title="Click to hide sidebar"
+              />
+            </>
+          )}
+          
+          {/* Collapsed state - show a tab to reopen */}
+          {sidebarCollapsed && (
+            <div 
+              className="hidden md:flex absolute top-1/2 -right-4 -translate-y-1/2 cursor-pointer"
+              onClick={() => setSidebarCollapsed(false)}
+            >
+              <div className={`p-2 rounded-r-lg shadow-lg ${theme === 'light' ? 'bg-white border border-gray-200' : 'bg-[#16181a] border border-[#2a2c2e]'}`}>
+                <PanelLeftOpen className="w-5 h-5" />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Mobile overlay backdrop */}

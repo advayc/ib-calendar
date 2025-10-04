@@ -113,10 +113,21 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
                   {(() => {
                     const maxVisible = 4;
                     const sortedEvents = [...day.events].sort((a, b) => {
+                      // Prioritize SAC/genforestsac/sac events (bolded, always at top)
                       const aPrior = prioritizedClubIds.includes(a.clubId);
                       const bPrior = prioritizedClubIds.includes(b.clubId);
                       if (aPrior && !bPrior) return -1;
                       if (!aPrior && bPrior) return 1;
+                      // If both same priority, sort by time ascending (empty time last)
+                      const aTime = a.time || '';
+                      const bTime = b.time || '';
+                      if (aTime && bTime) {
+                        return aTime.localeCompare(bTime);
+                      } else if (aTime) {
+                        return -1;
+                      } else if (bTime) {
+                        return 1;
+                      }
                       return 0;
                     });
                     const visible = sortedEvents.slice(0, maxVisible);
