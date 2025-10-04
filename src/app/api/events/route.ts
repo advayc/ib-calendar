@@ -31,13 +31,21 @@ function isAuthorizedDevFallback(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const clubId = searchParams.get('clubId');
-  const events = await prisma.event.findMany({
-    where: clubId ? { clubId } : undefined,
-    orderBy: { date: 'asc' }
-  });
-  return NextResponse.json(events);
+  try {
+    const { searchParams } = new URL(req.url);
+    const clubId = searchParams.get('clubId');
+    const events = await prisma.event.findMany({
+      where: clubId ? { clubId } : undefined,
+      orderBy: { date: 'asc' }
+    });
+    return NextResponse.json(events);
+  } catch (error: any) {
+    console.error('Error fetching events:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch events', details: error.message },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {

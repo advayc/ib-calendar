@@ -21,6 +21,15 @@ if (process.env.NODE_ENV === 'production') {
 	}
 }
 
-export const prisma = globalForPrisma.prisma || new PrismaClient();
+// Configure Prisma Client with optimal settings for serverless environments
+export const prisma = globalForPrisma.prisma || new PrismaClient({
+	log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+	// Optimize for serverless/edge environments
+	datasources: {
+		db: {
+			url: process.env.DATABASE_URL,
+		},
+	},
+});
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;

@@ -9,9 +9,12 @@
 // keep using SQLite by setting DATABASE_URL to a sqlite file URL (e.g.
 // "file:./dev.db") or by using a separate schema. For production/deployment
 // point DATABASE_URL to your Supabase Postgres connection string.
+// For Vercel/serverless deployments, use the Transaction Pooler connection string
+// DIRECT_URL should be the direct connection for migrations
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
