@@ -165,44 +165,63 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
           
           {/* Events positioned by time */}
           <div className="absolute inset-0 px-2">
-            {dayEvents.map(event => {
-              const club = clubsMap[event.clubId];
-              if (!club) return null;
-              
-              // Calculate position based on time
-              let topPosition = 0;
-              if (event.time) {
-                const timeMatch = event.time.match(/^(\d{1,2}):(\d{2})/);
-                if (timeMatch) {
-                  const hour = parseInt(timeMatch[1], 10);
-                  const minute = parseInt(timeMatch[2], 10);
-                  const slotIndex = timeSlots.indexOf(hour);
-                  if (slotIndex >= 0) {
-                    topPosition = slotIndex * 64 + (minute / 60) * 64;
+            {(() => {
+              // Group events by their start time
+              const eventsByTime: { [key: string]: Event[] } = {};
+              dayEvents.forEach(event => {
+                const timeKey = event.time || 'no-time';
+                if (!eventsByTime[timeKey]) {
+                  eventsByTime[timeKey] = [];
+                }
+                eventsByTime[timeKey].push(event);
+              });
+
+              // Render events, stacking those with the same time vertically
+              return dayEvents.map((event, eventIndex) => {
+                const club = clubsMap[event.clubId];
+                if (!club) return null;
+                
+                // Calculate position based on time
+                let topPosition = 0;
+                if (event.time) {
+                  const timeMatch = event.time.match(/^(\d{1,2}):(\d{2})/);
+                  if (timeMatch) {
+                    const hour = parseInt(timeMatch[1], 10);
+                    const minute = parseInt(timeMatch[2], 10);
+                    const slotIndex = timeSlots.indexOf(hour);
+                    if (slotIndex >= 0) {
+                      topPosition = slotIndex * 64 + (minute / 60) * 64;
+                    }
                   }
                 }
-              }
-              
-              return (
-                <div
-                  key={event.id}
-                  style={{
-                    position: 'absolute',
-                    top: `${topPosition + EVENT_TOP_OFFSET}px`,
-                    left: '8px',
-                    right: '8px',
-                  }}
-                >
-                  <EventCard
-                    event={event}
-                    club={club}
-                    theme={theme}
-                    isPrioritized={prioritizedClubIds.includes(event.clubId)}
-                    onClick={() => onSelectEvent?.(event)}
-                  />
-                </div>
-              );
-            })}
+
+                // Find index within same-time group to stack vertically
+                const timeKey = event.time || 'no-time';
+                const sameTimeEvents = eventsByTime[timeKey];
+                const indexInGroup = sameTimeEvents.findIndex(e => e.id === event.id);
+                const verticalOffset = indexInGroup * 28; // Stack with 28px spacing
+                
+                return (
+                  <div
+                    key={event.id}
+                    style={{
+                      position: 'absolute',
+                      top: `${topPosition + EVENT_TOP_OFFSET + verticalOffset}px`,
+                      left: '8px',
+                      right: '8px',
+                    }}
+                  >
+                    <EventCard
+                      event={event}
+                      club={club}
+                      theme={theme}
+                      isPrioritized={prioritizedClubIds.includes(event.clubId)}
+                      onClick={() => onSelectEvent?.(event)}
+                    />
+                  </div>
+                );
+              });
+            })()}
             
             {/* Current time indicator - only show if viewing today */}
             {isDayToday && currentTimePosition !== null && (
