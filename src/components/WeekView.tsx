@@ -124,8 +124,62 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
     }
     return slots;
   }, []);
-  // Small visual offset so events don't sit flush against the top of the grid
-  const EVENT_TOP_OFFSET = 8;
+
+  // Calculate maximum events per time slot across all days
+  const maxEventsPerTimeSlot = useMemo(() => {
+    const counts: { [key: number]: number } = {};
+    
+    // Initialize counts for each time slot
+    timeSlots.forEach(hour => {
+      counts[hour] = 0;
+    });
+
+    // Count events for each time slot across all days
+    Object.values(eventsGroupedByDay).forEach(dayEvents => {
+      const timeSlotCounts: { [key: number]: number } = {};
+      
+      dayEvents.forEach(event => {
+        if (event.time) {
+          const timeMatch = event.time.match(/^(\d{1,2}):(\d{2})/);
+          if (timeMatch) {
+            const hour = parseInt(timeMatch[1], 10);
+            timeSlotCounts[hour] = (timeSlotCounts[hour] || 0) + 1;
+          }
+        }
+      });
+      
+      // Update max counts
+      Object.entries(timeSlotCounts).forEach(([hour, count]) => {
+        const h = parseInt(hour, 10);
+        counts[h] = Math.max(counts[h], count);
+      });
+    });
+    
+    return counts;
+  }, [eventsGroupedByDay, timeSlots]);
+
+  // Calculate height for each time slot
+  const getTimeSlotHeight = (hour: number) => {
+    const baseHeight = 64;
+    const eventHeight = 24;
+    const padding = 16;
+    const maxEvents = maxEventsPerTimeSlot[hour] || 0;
+    
+    if (maxEvents === 0) return baseHeight;
+    
+    // Calculate total height needed for events plus padding
+    const neededHeight = maxEvents * eventHeight + padding;
+    return Math.max(baseHeight, neededHeight);
+  };
+
+  // Calculate cumulative position for a given hour
+  const getTimeSlotPosition = (hour: number) => {
+    let position = 0;
+    for (let h = timeSlots[0]; h < hour; h++) {
+      position += getTimeSlotHeight(h);
+    }
+    return position;
+  };
 
   return (
     <div className={`flex-1 flex flex-col overflow-hidden ${isLight ? 'bg-white' : 'bg-[#0d0e0f]'}`}>
@@ -163,7 +217,8 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
           {timeSlots.map(hour => (
             <div
               key={hour}
-              className={`h-16 border-b flex items-start justify-end pr-2 pt-1 ${isLight ? 'border-gray-200 text-gray-500' : 'border-[#1e2022] text-gray-400'}`}
+              style={{ height: `${getTimeSlotHeight(hour)}px` }}
+              className={`border-b flex items-start justify-end pr-2 pt-1 ${isLight ? 'border-gray-200 text-gray-500' : 'border-[#1e2022] text-gray-400'}`}
             >
               <span className="text-xs">
                 {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
@@ -207,7 +262,8 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
                   {timeSlots.map(hour => (
                     <div
                       key={hour}
-                      className={`h-16 border-b ${isLight ? 'border-gray-200' : 'border-[#1e2022]'}`}
+                      style={{ height: `${getTimeSlotHeight(hour)}px` }}
+                      className={`border-b ${isLight ? 'border-gray-200' : 'border-[#1e2022]'}`}
                     ></div>
                   ))}
                   
@@ -231,15 +287,19 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
                         
                         // Calculate position based on time
                         let topPosition = 0;
+                        let hour = 0;
                         if (event.time) {
                           const timeMatch = event.time.match(/^(\d{1,2}):(\d{2})/);
                           if (timeMatch) {
-                            const hour = parseInt(timeMatch[1], 10);
+                            hour = parseInt(timeMatch[1], 10);
                             const minute = parseInt(timeMatch[2], 10);
-                            const slotIndex = timeSlots.indexOf(hour);
-                            if (slotIndex >= 0) {
-                              topPosition = slotIndex * 64 + (minute / 60) * 64;
-                            }
+                            
+                            // Get position at start of hour slot
+                            topPosition = getTimeSlotPosition(hour);
+                            
+                            // Add offset for minutes within the hour
+                            const slotHeight = getTimeSlotHeight(hour);
+                            topPosition += (minute / 60) * slotHeight;
                           }
                         }
 
@@ -247,14 +307,19 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
                         const timeKey = event.time || 'no-time';
                         const sameTimeEvents = eventsByTime[timeKey];
                         const indexInGroup = sameTimeEvents.findIndex(e => e.id === event.id);
-                        const verticalOffset = indexInGroup * 28; // Stack with 28px spacing
+                        const verticalOffset = indexInGroup * 24; // Stack with 24px spacing
+                        
+                        // Center events within the time slot
+                        const slotHeight = getTimeSlotHeight(hour);
+                        const totalEventsHeight = sameTimeEvents.length * 24;
+                        const centeringOffset = (slotHeight - totalEventsHeight) / 2;
                         
                         return (
                           <div
                             key={event.id}
                             style={{
                               position: 'absolute',
-                              top: `${topPosition + EVENT_TOP_OFFSET + verticalOffset}px`,
+                              top: `${topPosition + centeringOffset + verticalOffset}px`,
                               left: '4px',
                               right: '4px',
                             }}
@@ -275,7 +340,19 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
                     {isDayToday && currentTimePosition !== null && (
                       <div
                         className="absolute left-0 right-0 pointer-events-none z-10"
-                        style={{ top: `${currentTimePosition}px` }}
+                        style={{ top: `${(() => {
+                          // Recalculate current time position with dynamic heights
+                          const now = new Date();
+                          const hour = now.getHours();
+                          const minute = now.getMinutes();
+                          
+                          if (hour >= 6 && hour <= 23) {
+                            const basePosition = getTimeSlotPosition(hour);
+                            const slotHeight = getTimeSlotHeight(hour);
+                            return basePosition + (minute / 60) * slotHeight;
+                          }
+                          return 0;
+                        })()}px` }}
                       >
                         <div className="flex items-center">
                           <div className="w-2 h-2 rounded-full bg-[#FF3B30] -ml-1"></div>
