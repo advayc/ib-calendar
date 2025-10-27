@@ -22,8 +22,7 @@ import {
   startOfWeek, 
   endOfWeek, 
   eachDayOfInterval, 
-  isSameMonth, 
-  isToday,
+  isSameMonth,
   addMonths,
   subMonths,
   
@@ -69,6 +68,10 @@ export const getCalendarDays = (date: Date, events: Event[]): CalendarDay[] => {
     }
   };
 
+  // Create a normalized "today" date for reliable comparison
+  const today = new Date();
+  const normalizedToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
   return days.map(day => {
     const dayStart = normalizeDateOnly(day);
     const dayEvents = events.filter(event => {
@@ -77,11 +80,14 @@ export const getCalendarDays = (date: Date, events: Event[]): CalendarDay[] => {
       return evDate.getTime() === dayStart.getTime();
     });
 
+    // Compare normalized dates instead of using isToday from date-fns
+    const isTodayFlag = dayStart.getTime() === normalizedToday.getTime();
+
     return {
       date: day,
       events: dayEvents,
       isCurrentMonth: isSameMonth(day, date),
-      isToday: isToday(day)
+      isToday: isTodayFlag
     };
   });
 };

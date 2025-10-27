@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { format, addDays, subDays, isToday } from 'date-fns';
+import { format, addDays, subDays } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Event, Club } from '@/types';
 import { useClubs } from '@/context/ClubContext';
@@ -100,7 +100,12 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
   };
 
   const isLight = theme === 'light';
-  const isDayToday = isToday(currentDate);
+  
+  // Use normalized date comparison for isToday check
+  const today = new Date();
+  const normalizedToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const normalizedCurrent = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+  const isDayToday = normalizedCurrent.getTime() === normalizedToday.getTime();
 
   // Generate time slots for the day (6 AM to 11 PM)
   const timeSlots = useMemo(() => {

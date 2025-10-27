@@ -7,7 +7,6 @@ import {
   endOfWeek,
   eachDayOfInterval,
   isSameMonth,
-  isToday,
   isSameDay,
   format,
   addMonths,
@@ -75,7 +74,13 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ value, onChange, activeDate
       <div className="grid grid-cols-7 gap-1 text-[11px] leading-tight">
         {days.map((d) => {
           const faded = !isSameMonth(d, activeDate);
-          const today = isToday(d);
+          
+          // Use normalized date comparison for isToday check
+          const todayDate = new Date();
+          const normalizedToday = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
+          const normalizedD = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+          const today = normalizedD.getTime() === normalizedToday.getTime();
+          
           const selected = isSameDay(d, value);
             return (
               <button
@@ -83,7 +88,7 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ value, onChange, activeDate
                 onClick={() => onChange?.(d)}
                 className={`h-8 w-8 flex items-center justify-center rounded-md transition-colors focus:outline-none ${
                   today
-                    ? 'bg-[#e54848] text-white font-semibold'
+                    ? 'bg-[#FF3B30] text-white font-semibold'
                     : faded
                       ? isLight
                         ? 'text-gray-300'

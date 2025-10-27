@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { startOfWeek, endOfWeek, eachDayOfInterval, format, addWeeks, subWeeks, isToday } from 'date-fns';
+import { startOfWeek, endOfWeek, eachDayOfInterval, format, addWeeks, subWeeks } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Event, Club } from '@/types';
 import { useClubs } from '@/context/ClubContext';
@@ -232,7 +232,12 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
           {weekDays.map((day, idx) => {
             const dateKey = format(day, 'yyyy-MM-dd');
             const dayEvents = eventsGroupedByDay[dateKey] || [];
-            const isDayToday = isToday(day);
+            
+            // Use normalized date comparison for isToday check
+            const today = new Date();
+            const normalizedToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const normalizedDay = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+            const isDayToday = normalizedDay.getTime() === normalizedToday.getTime();
 
             return (
               <div
