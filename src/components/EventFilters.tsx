@@ -30,8 +30,8 @@ const EventFilters: React.FC<EventFiltersProps> = ({ filters, clubs, onFilterCha
   const isLight = theme === 'light';
   const fieldClass = `w-full px-2 py-1.5 rounded-md text-sm outline-none transition-colors ${
     isLight 
-      ? 'bg-white border border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-500'
-      : 'bg-[#1a1c1e] border border-[#2a2c2e] text-gray-200 placeholder-gray-500 focus:border-blue-400'
+      ? 'bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
+      : 'bg-[#1E1E1E] border border-[#2A2A2A] text-gray-200 placeholder-gray-500 focus:border-blue-400'
   }`;
 
   const updateFilter = (key: keyof EventFilterState, value: string | string[] | boolean) => {

@@ -42,8 +42,8 @@ const ViewSelector: React.FC<ViewSelectorProps> = ({ currentView, onViewChange, 
         onClick={() => setIsOpen(!isOpen)}
         className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors border ${
           isLight
-            ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-            : 'bg-[#1a1c1e] border-[#2a2c2e] text-gray-200 hover:bg-[#2a2c2f]'
+            ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+            : 'bg-[#1E1E1E] border-[#2A2A2A] text-gray-200 hover:bg-[#252525]'
         }`}
       >
         {currentLabel}

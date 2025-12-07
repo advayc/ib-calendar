@@ -48,10 +48,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   const [editCourseData, setEditCourseData] = useState<Partial<Course>>({});
 
   const isLight = theme === 'light';
-  const cardClass = isLight ? 'bg-white border border-gray-200 shadow-sm' : 'bg-[#1a1c1e] border border-[#2a2c2e]';
+  const cardClass = isLight ? 'bg-white border border-gray-200 shadow-sm' : 'bg-[#1E1E1E] border border-[#2A2A2A]';
   const inputClass = isLight 
     ? 'bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
-    : 'bg-[#14161a] border border-[#2a2c2e] text-gray-100 placeholder-gray-500 focus:border-blue-500';
+    : 'bg-[#191919] border border-[#2A2A2A] text-gray-100 placeholder-gray-500 focus:border-blue-500';
 
   const handleAddEvent = (e: React.FormEvent) => {
     e.preventDefault();
@@ -261,7 +261,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
             </label>
 
             {newEvent.isRecurring && (
-              <div className={`p-4 rounded-lg space-y-3 ${isLight ? 'bg-gray-50' : 'bg-[#14161a]'}`}>
+              <div className={`p-4 rounded-lg space-y-3 ${isLight ? 'bg-gray-50' : 'bg-[#191919]'}`}>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className={`text-xs font-medium mb-1 block ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>
@@ -527,7 +527,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
               return (
                 <div
                   key={event.id}
-                  className={`flex items-center justify-between p-3 rounded-lg ${isLight ? 'bg-gray-50 hover:bg-gray-100' : 'bg-[#14161a] hover:bg-[#1a1c20]'} transition-colors`}
+                  className={`flex items-center justify-between p-3 rounded-lg ${isLight ? 'bg-gray-50 hover:bg-gray-100' : 'bg-[#191919] hover:bg-[#252525]'} transition-colors`}
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">

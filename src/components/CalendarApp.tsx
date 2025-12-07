@@ -149,7 +149,7 @@ const CalendarApp: React.FC = () => {
               className="hidden md:flex absolute top-1/2 -right-4 -translate-y-1/2 cursor-pointer"
               onClick={() => setSidebarCollapsed(false)}
             >
-              <div className={`p-2 rounded-r-lg shadow-lg ${theme === 'light' ? 'bg-white border border-gray-200' : 'bg-[#16181a] border border-[#2a2c2e]'}`}>
+              <div className={`p-2 rounded-r-lg shadow-lg ${theme === 'light' ? 'bg-white border border-gray-200' : 'bg-[#1E1E1E] border border-[#2A2A2A]'}`}>
                 <PanelLeftOpen className="w-5 h-5" />
               </div>
             </div>

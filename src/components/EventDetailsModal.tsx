@@ -13,7 +13,7 @@ const EventDetailsModal: React.FC<Props> = ({ event, clubs, theme, onClose }) =>
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
       <div
-        className={`w-full max-w-md mx-4 rounded-lg p-6 shadow-lg border ${theme === 'light' ? 'bg-white border-gray-200 text-gray-900' : 'bg-[#14161a] border-[#1e2022] text-gray-100'}`}
+        className={`w-full max-w-md mx-4 rounded-lg p-6 shadow-lg border ${theme === 'light' ? 'bg-white border-gray-200 text-gray-900' : 'bg-[#1E1E1E] border-[#2A2A2A] text-gray-100'}`}
         onClick={e => e.stopPropagation()}
       >
         <h3 className="text-lg font-semibold mb-2">{event.title}</h3>

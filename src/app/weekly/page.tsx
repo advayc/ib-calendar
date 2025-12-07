@@ -81,7 +81,7 @@ const WeeklyCalendarPage: React.FC = () => {
         {/* Main content */}
         <div className="flex-1 flex flex-col relative">
           {/* Header with collapse button and navigation */}
-          <div className={`flex items-center gap-3 px-4 py-3 border-b ${theme === 'light' ? 'border-gray-200 bg-white' : 'border-[#1e2022] bg-[#14161a]'}`}>
+          <div className={`flex items-center gap-3 px-4 py-3 border-b ${theme === 'light' ? 'border-gray-200 bg-white' : 'border-[#2A2A2A] bg-[#1E1E1E]'}`}>
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               className={`p-2 rounded-lg transition-colors ${theme === 'light' ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-[#2a2c2f] text-gray-300'}`}
