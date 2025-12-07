@@ -1,0 +1,11 @@
+{
+  "buildCommand": "prisma generate && prisma db push && next build",
+  "env": {
+    "DATABASE_URL": "@database_url"
+  },
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 10
+    }
+  }
+}
