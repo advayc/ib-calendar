@@ -48,13 +48,26 @@ export async function POST(req: NextRequest) {
   try {
     // If recurrence provided, expand and create a group ID
     const created: any[] = [];
-    if (recurrence?.frequency === 'weekly') {
+    if (recurrence?.frequency) {
       const interval = recurrence.interval || 1;
-      const max = recurrence.count || 52;
+      const max = recurrence.count || 365;
       let current = new Date(date);
       let count = 0;
       const until = recurrence.until ? new Date(recurrence.until) : undefined;
       const groupId = `rec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Calculate days to add based on frequency
+      const getDaysToAdd = (freq: string) => {
+        switch (freq) {
+          case 'daily': return 1;
+          case 'weekly': return 7;
+          case 'biweekly': return 14;
+          case 'monthly': return 30; // Approximate
+          default: return 7;
+        }
+      };
+      
+      const daysToAdd = getDaysToAdd(recurrence.frequency);
       
       while (count < max) {
         if (until && current > until) break;
@@ -66,7 +79,7 @@ export async function POST(req: NextRequest) {
             date: current,
             time,
             courseId,
-            recurrenceFrequency: 'WEEKLY',
+            recurrenceFrequency: recurrence.frequency.toUpperCase(),
             recurrenceInterval: interval,
             recurrenceCount: recurrence.count,
             recurrenceUntil: recurrence.until ? new Date(recurrence.until) : undefined,
@@ -74,7 +87,14 @@ export async function POST(req: NextRequest) {
           }
         });
         created.push(e);
-        current = new Date(current.getTime() + interval * 7 * 24 * 60 * 60 * 1000);
+        
+        // For monthly, use proper month calculation
+        if (recurrence.frequency === 'monthly') {
+          current = new Date(current);
+          current.setMonth(current.getMonth() + interval);
+        } else {
+          current = new Date(current.getTime() + interval * daysToAdd * 24 * 60 * 60 * 1000);
+        }
         count++;
       }
       return NextResponse.json(created, { status: 201 });

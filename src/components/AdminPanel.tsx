@@ -35,6 +35,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     description: '',
     location: '',
     courseId: '',
+    isRecurring: false,
+    recurrenceFrequency: 'daily' as 'daily' | 'weekly' | 'biweekly' | 'monthly',
+    recurrenceCount: 7,
+    recurrenceUntil: '',
   });
 
   const [newCourse, setNewCourse] = useState({ name: '', color: '#10b981', grade: 'DP2' });
@@ -57,16 +61,39 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     }
 
     try {
-      onAddEvent({
+      const eventData: any = {
         title: newEvent.title,
         date: newEvent.date,
         time: newEvent.time || undefined,
         description: newEvent.description || undefined,
         location: newEvent.location || undefined,
         courseId: newEvent.courseId,
+      };
+
+      // Add recurrence if enabled
+      if (newEvent.isRecurring) {
+        eventData.recurrence = {
+          frequency: newEvent.recurrenceFrequency,
+          interval: 1,
+          count: newEvent.recurrenceCount || undefined,
+          until: newEvent.recurrenceUntil || undefined,
+        };
+      }
+
+      onAddEvent(eventData);
+      toast.success(newEvent.isRecurring ? 'Recurring deadlines added!' : 'Deadline added!');
+      setNewEvent({ 
+        title: '', 
+        date: '', 
+        time: '', 
+        description: '', 
+        location: '', 
+        courseId: '',
+        isRecurring: false,
+        recurrenceFrequency: 'daily',
+        recurrenceCount: 7,
+        recurrenceUntil: '',
       });
-      toast.success('Deadline added!');
-      setNewEvent({ title: '', date: '', time: '', description: '', location: '', courseId: '' });
     } catch (err) {
       toast.error('Failed to add deadline');
     }
@@ -219,6 +246,74 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
             className={`w-full px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${inputClass}`}
           />
 
+          {/* Recurring Deadline Options */}
+          <div className="space-y-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={newEvent.isRecurring}
+                onChange={(e) => setNewEvent({ ...newEvent, isRecurring: e.target.checked })}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className={`text-sm font-medium ${isLight ? 'text-gray-900' : 'text-gray-200'}`}>
+                Recurring Deadline
+              </span>
+            </label>
+
+            {newEvent.isRecurring && (
+              <div className={`p-4 rounded-lg space-y-3 ${isLight ? 'bg-gray-50' : 'bg-[#14161a]'}`}>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={`text-xs font-medium mb-1 block ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>
+                      Frequency
+                    </label>
+                    <select
+                      value={newEvent.recurrenceFrequency}
+                      onChange={(e) => setNewEvent({ ...newEvent, recurrenceFrequency: e.target.value as any })}
+                      className={`w-full px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${inputClass}`}
+                    >
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="biweekly">Bi-weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`text-xs font-medium mb-1 block ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>
+                      Number of Events
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="365"
+                      value={newEvent.recurrenceCount}
+                      onChange={(e) => setNewEvent({ ...newEvent, recurrenceCount: parseInt(e.target.value) || 1 })}
+                      className={`w-full px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${inputClass}`}
+                      placeholder="7"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className={`text-xs font-medium mb-1 block ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>
+                    Or End Date (optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={newEvent.recurrenceUntil}
+                    onChange={(e) => setNewEvent({ ...newEvent, recurrenceUntil: e.target.value })}
+                    className={`w-full px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${inputClass}`}
+                  />
+                </div>
+                <p className={`text-xs ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
+                  {newEvent.recurrenceUntil 
+                    ? `Creates events from ${newEvent.date} until ${newEvent.recurrenceUntil}`
+                    : `Creates ${newEvent.recurrenceCount} ${newEvent.recurrenceFrequency} events starting ${newEvent.date}`
+                  }
+                </p>
+              </div>
+            )}
+          </div>
+
           <button
             type="submit"
             className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
@@ -286,7 +381,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                     <div className="grid grid-cols-2 gap-3">
                       <select
                         value={editCourseData.grade || 'DP2'}
-                        onChange={(e) => setEditCourseData({ ...editCourseData, grade: e.target.value })}
+                        onChange={(e) => setEditCourseData({ ...editCourseData, grade: e.target.value as 'DP1' | 'DP2' })}
                         className={`px-3 py-2 rounded-lg outline-none ${inputClass}`}
                       >
                         <option value="DP2">DP2</option>

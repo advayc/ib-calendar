@@ -233,7 +233,7 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
               });
 
               // Render events, stacking those with the same time vertically
-              return dayEvents.map((event, eventIndex) => {
+              return dayEvents.map((event) => {
                 const club = clubsMap[event.courseId];
                 if (!club) return null;
                 
