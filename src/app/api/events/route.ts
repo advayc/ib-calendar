@@ -31,13 +31,21 @@ function isAuthorizedDevFallback(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const courseId = searchParams.get('courseId');
-  const events = await prisma.event.findMany({
-    where: courseId ? { courseId } : undefined,
-    orderBy: { date: 'asc' }
-  });
-  return NextResponse.json(events);
+  try {
+    const { searchParams } = new URL(req.url);
+    const courseId = searchParams.get('courseId');
+    const events = await prisma.event.findMany({
+      where: courseId ? { courseId } : undefined,
+      orderBy: { date: 'asc' }
+    });
+    return NextResponse.json(events);
+  } catch (error) {
+    console.error('GET /api/events error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch events', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -105,7 +113,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(event, { status: 201 });
     }
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    console.error('[api/events] POST error:', e);
+    return NextResponse.json(
+      { error: e.message || 'Failed to create event', details: e.code || undefined },
+      { status: 500 }
+    );
   }
 }
 

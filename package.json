@@ -8,6 +8,7 @@
     "verify:db": "node scripts/verify-db-connection.js",
     "setup": "node scripts/setup-migration.js",
     "build": "prisma generate && prisma db push && next build",
+    "build:vercel": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate"
@@ -20,6 +21,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
     "lucide-react": "^0.544.0",
     "next": "15.5.7",
     "react": "19.1.0",

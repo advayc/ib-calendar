@@ -33,3 +33,17 @@ export const prisma = globalForPrisma.prisma || new PrismaClient({
 });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+
+// Log database connection status (for debugging)
+prisma.$connect()
+	.then(() => {
+		if (process.env.NODE_ENV === 'development') {
+			console.log('✓ Connected to Supabase database');
+		}
+	})
+	.catch((err) => {
+		console.error('✗ Failed to connect to database:', err.message);
+		if (process.env.NODE_ENV === 'production') {
+			console.error('DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'NOT SET');
+		}
+	});

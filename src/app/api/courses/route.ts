@@ -37,8 +37,16 @@ function isAuthorizedDevFallback(req: NextRequest) {
 }
 
 export async function GET() {
-  const courses = await prisma.course.findMany({ orderBy: { name: 'asc' } });
-  return NextResponse.json(courses);
+  try {
+    const courses = await prisma.course.findMany({ orderBy: { name: 'asc' } });
+    return NextResponse.json(courses);
+  } catch (error) {
+    console.error('GET /api/courses error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch courses', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {

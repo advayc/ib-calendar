@@ -1,8 +1,6 @@
 {
-  "buildCommand": "prisma generate && prisma db push && next build",
-  "env": {
-    "DATABASE_URL": "@database_url"
-  },
+  "buildCommand": "npm run build:vercel",
+  "postBuildCommand": "npx prisma db push --skip-generate --skip-preview",
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 10
