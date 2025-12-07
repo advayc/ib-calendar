@@ -66,7 +66,7 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
       
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Weekday headers */}
-        <div className={`hidden sm:grid grid-cols-7 border-b text-[11px] font-medium tracking-wide ${isLight ? 'bg-gray-100 border-gray-200' : 'bg-[#16181a] border-[#1e2022]'}`}>        
+        <div className={`hidden sm:grid grid-cols-7 border-b text-[11px] font-medium tracking-wide ${isLight ? 'bg-gray-100 border-gray-200' : 'bg-[#1E1E1E] border-[#2A2A2A]'}`}>        
           {weekDays.map(day => (
             <div
               key={day}
@@ -77,7 +77,7 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
           ))}
         </div>
         {/* Mobile weekday header (sticky) */}
-        <div className={`sm:hidden grid grid-cols-7 text-[10px] font-medium tracking-wide border-b ${isLight ? 'bg-gray-100/90 backdrop-blur border-gray-200' : 'bg-[#16181a]/80 backdrop-blur border-[#1e2022]'}`}>        
+        <div className={`sm:hidden grid grid-cols-7 text-[10px] font-medium tracking-wide border-b ${isLight ? 'bg-gray-100/90 backdrop-blur border-gray-200' : 'bg-[#1E1E1E]/80 backdrop-blur border-[#2A2A2A]'}`}>        
           {weekDays.map(day => (
             <div key={day} className={`py-2 text-center uppercase ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>{day}</div>
           ))}

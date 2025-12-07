@@ -169,7 +169,7 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
   return (
     <div className={`flex-1 flex flex-col overflow-hidden ${isLight ? 'bg-white' : 'bg-[#0d0e0f]'}`}>
       {/* Day Navigation */}
-      <div className={`flex items-center justify-between px-4 py-3 border-b ${isLight ? 'border-gray-200 bg-gray-50' : 'border-[#1e2022] bg-[#16181a]'}`}>
+      <div className={`flex items-center justify-between px-4 py-3 border-b ${isLight ? 'border-gray-200 bg-gray-50' : 'border-[#2A2A2A] bg-[#1E1E1E]'}`}>
         <button
           onClick={handlePreviousDay}
           className={`p-2 rounded-lg transition-colors ${isLight ? 'hover:bg-gray-200 text-gray-700' : 'hover:bg-[#2a2c2f] text-gray-300'}`}
@@ -194,7 +194,7 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
       {/* Day Grid with Time Column */}
       <div className="flex-1 flex overflow-auto" ref={scrollContainerRef}>
         {/* Time column */}
-        <div className={`w-20 flex-shrink-0 border-r ${isLight ? 'border-gray-200 bg-gray-50' : 'border-[#1e2022] bg-[#16181a]'}`}>
+        <div className={`w-20 flex-shrink-0 border-r ${isLight ? 'border-gray-200 bg-gray-50' : 'border-[#2A2A2A] bg-[#1E1E1E]'}`}>
           {timeSlots.map(hour => (
             <div
               key={hour}

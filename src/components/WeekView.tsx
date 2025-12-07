@@ -180,7 +180,7 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
   return (
     <div className={`flex-1 flex flex-col overflow-hidden ${isLight ? 'bg-white' : 'bg-[#0d0e0f]'}`}>
       {/* Week Navigation */}
-      <div className={`flex items-center justify-between px-4 py-3 border-b ${isLight ? 'border-gray-200 bg-gray-50' : 'border-[#1e2022] bg-[#16181a]'}`}>
+      <div className={`flex items-center justify-between px-4 py-3 border-b ${isLight ? 'border-gray-200 bg-gray-50' : 'border-[#2A2A2A] bg-[#1E1E1E]'}`}>
         <button
           onClick={handlePreviousWeek}
           className={`p-2 rounded-lg transition-colors ${isLight ? 'hover:bg-gray-200 text-gray-700' : 'hover:bg-[#2a2c2f] text-gray-300'}`}
@@ -205,7 +205,7 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
       {/* Week Grid with Time Column */}
       <div className="flex-1 flex overflow-auto" ref={scrollContainerRef}>
         {/* Time column */}
-        <div className={`w-16 flex-shrink-0 border-r ${isLight ? 'border-gray-200 bg-gray-50' : 'border-[#1e2022] bg-[#16181a]'}`}>
+        <div className={`w-16 flex-shrink-0 border-r ${isLight ? 'border-gray-200 bg-gray-50' : 'border-[#2A2A2A] bg-[#1E1E1E]'}`}>
           {/* Empty corner for day headers */}
           <div className={`h-16 border-b ${isLight ? 'border-gray-200' : 'border-[#1e2022]'}`}></div>
           
@@ -241,7 +241,7 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
                 className={`border-r ${isLight ? 'border-gray-200' : 'border-[#1e2022]'}`}
               >
                 {/* Day Header - centered */}
-                <div className={`h-16 border-b flex flex-col items-center justify-center ${isLight ? 'bg-gray-50 border-gray-200' : 'bg-[#16181a] border-[#1e2022]'}`}>
+                <div className={`h-16 border-b flex flex-col items-center justify-center ${isLight ? 'bg-gray-50 border-gray-200' : 'bg-[#1E1E1E] border-[#2A2A2A]'}`}>
                   <div className={`text-xs font-medium uppercase ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
                     {format(day, 'EEE')}
                   </div>

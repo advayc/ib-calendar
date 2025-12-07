@@ -28,7 +28,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error, loading =
         <label className={`text-sm font-medium ${theme === 'light' ? 'text-gray-900' : 'text-gray-200'}`}>Username</label>
         <input
           type="text"
-          className={`w-full px-3 py-2 rounded-md outline-none border text-sm placeholder-gray-400 focus:ring-0 ${theme==='light' ? 'bg-white border-gray-300 text-gray-900 focus:border-blue-500' : 'bg-[#111214] border-[#2a2c2f] text-gray-100 focus:border-blue-400'}`}
+          className={`w-full px-3 py-2 rounded-md outline-none border text-sm placeholder-gray-400 focus:ring-0 ${theme==='light' ? 'bg-white border-gray-300 text-gray-900 focus:border-blue-500' : 'bg-[#191919] border-[#2A2A2A] text-gray-100 focus:border-blue-400'}`}
           value={username}
           autoComplete="username"
           onChange={(e)=>setUsername(e.target.value)}
@@ -40,7 +40,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error, loading =
         <div className="relative">
           <input
             type={showPassword ? 'text' : 'password'}
-            className={`w-full px-3 py-2 rounded-md outline-none border text-sm pr-10 placeholder-gray-400 focus:ring-0 ${theme==='light' ? 'bg-white border-gray-300 text-gray-900 focus:border-blue-500' : 'bg-[#111214] border-[#2a2c2f] text-gray-100 focus:border-blue-400'}`}
+            className={`w-full px-3 py-2 rounded-md outline-none border text-sm pr-10 placeholder-gray-400 focus:ring-0 ${theme==='light' ? 'bg-white border-gray-300 text-gray-900 focus:border-blue-500' : 'bg-[#191919] border-[#2A2A2A] text-gray-100 focus:border-blue-400'}`}
             value={password}
             autoComplete="current-password"
             onChange={(e)=>setPassword(e.target.value)}
