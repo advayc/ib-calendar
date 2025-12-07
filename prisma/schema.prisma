@@ -19,12 +19,13 @@ generator client {
 }
 
 
-model Club {
+model Course {
   id        String   @id @default(cuid())
   slug      String   @unique
   name      String
   color     String   @default("#007AFF")
   enabled   Boolean  @default(true)
+  grade     String   @default("DP2") // DP1 or DP2 for filtering
   events    Event[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -37,13 +38,14 @@ model Event {
   location    String?
   date        DateTime  // date portion used (store at midnight or with time if needed)
   time        String?   // simple HH:mm or label like 'All Day'
-  clubId      String
-  club        Club      @relation(fields: [clubId], references: [id])
+  courseId    String
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
   // Recurrence (expanded occurrences stored separately OR reference template)
   recurrenceFrequency String? // e.g. 'WEEKLY'
   recurrenceInterval  Int? // every X weeks
   recurrenceCount     Int? // number of occurrences
   recurrenceUntil     DateTime?
+  recurrenceGroupId   String? // Group ID to link recurring events
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }

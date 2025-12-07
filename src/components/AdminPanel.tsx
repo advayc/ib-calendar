@@ -1,605 +1,485 @@
- 'use client';
+'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Calendar as CalendarIcon, Clock, Repeat, PlusCircle, Save, Trash2, ExternalLink } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
-import { Event, Club } from '@/types';
-import EventFilters, { EventFilterState } from './EventFilters';
-import { applyEventFilters } from '@/utils/eventFilters';
+import React, { useState } from 'react';
+import { Plus, X, Edit2, Trash2, ExternalLink } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { Event, Course } from '@/types';
 
 interface AdminPanelProps {
   events: Event[];
-  clubs: Club[];
+  clubs: Course[];
   onAddEvent: (event: Omit<Event, 'id'>) => void;
   onDeleteEvent: (id: string) => void;
-  onUpdateClub?: (clubId: string, changes: Partial<Club>) => void;
+  onUpdateClub?: (courseId: string, changes: Partial<Course>) => void;
   onUpdateEvent?: (eventId: string, changes: Partial<Event>) => void;
-  onAddClub?: (club: { name: string; slug?: string; color?: string }) => Promise<Club | undefined> | void;
-  onDeleteClub?: (clubId: string) => void;
+  onAddClub?: (course: { name: string; color?: string; grade?: string }) => Promise<Course | undefined> | void;
+  onDeleteClub?: (courseId: string) => void;
   theme?: 'light' | 'dark';
 }
 
-const AdminPanel: React.FC<AdminPanelProps> = ({ events, clubs, onAddEvent, onDeleteEvent, onUpdateClub, onUpdateEvent, onAddClub, onDeleteClub, theme = 'light' }) => {
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
-  interface NewEventState {
-    title: string;
-    date: string;
-    time: string;
-    description: string;
-    location: string;
-    clubId: string;
-    recurrence: boolean;
-    frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly';
-    interval: number;
-    until: string;
-    count: string;
-  }
-
-  const [newEvent, setNewEvent] = useState<NewEventState>({
+const AdminPanel: React.FC<AdminPanelProps> = ({ 
+  events, 
+  clubs, 
+  onAddEvent, 
+  onDeleteEvent, 
+  onUpdateClub, 
+  onUpdateEvent,
+  onAddClub, 
+  onDeleteClub, 
+  theme = 'light' 
+}) => {
+  const [newEvent, setNewEvent] = useState({
     title: '',
     date: '',
     time: '',
     description: '',
     location: '',
-    clubId: '',
-    recurrence: false,
-    frequency: 'weekly',
-    interval: 1,
-    until: '',
-    count: ''
+    courseId: '',
   });
 
-  const [allDay, setAllDay] = useState(false);
-
-  // slug will be auto-generated server-side if omitted
-  const [newClub, setNewClub] = useState({ name: '', color: '#4ade80' });
-  const [addingClub, setAddingClub] = useState(false);
-  const [clubStatus, setClubStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [editingClub, setEditingClub] = useState<string | null>(null);
-  const [editClubData, setEditClubData] = useState({ name: '', color: '' });
-
+  const [newCourse, setNewCourse] = useState({ name: '', color: '#10b981', grade: 'DP2' });
   const [editingEvent, setEditingEvent] = useState<string | null>(null);
-  const [editEventData, setEditEventData] = useState<NewEventState>({
-    title: '',
-    date: '',
-    time: '',
-    description: '',
-    location: '',
-    clubId: '',
-    recurrence: false,
-    frequency: 'weekly',
-    interval: 1,
-    until: '',
-    count: ''
-  });
-  
-  // Event filters state
-  const [eventFilters, setEventFilters] = useState<EventFilterState>({
-    searchText: '',
-    clubIds: [],
-    dateRange: 'all',
-    customDateFrom: '',
-    customDateTo: '',
-    showAllDay: true,
-    showRecurring: true,
-    showNonRecurring: true,
-    sortBy: 'date-asc'
-  });
+  const [editEventData, setEditEventData] = useState<Partial<Event>>({});
+  const [editingCourse, setEditingCourse] = useState<string | null>(null);
+  const [editCourseData, setEditCourseData] = useState<Partial<Course>>({});
 
-  const displayedEvents = useMemo(() => {
-    // Apply filters first
-    const filtered = applyEventFilters(events, eventFilters, clubs);
-    
-    // Group recurring events (show only first occurrence)
-    const seriesMap = new Map<string, Event[]>();
-    const singles: Event[] = [];
-    filtered.forEach(ev => {
-      const hasRec = !!(ev.recurrenceGroupId || ev.recurrenceFrequency);
-      if (hasRec && ev.recurrenceGroupId) {
-        const key = ev.recurrenceGroupId;
-        const arr = seriesMap.get(key) || [];
-        arr.push(ev);
-        seriesMap.set(key, arr);
-      } else {
-        singles.push(ev);
-      }
-    });
-    const seriesFirst = Array.from(seriesMap.values()).map(group => 
-      group.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0]
-    );
-    
-    return [...singles, ...seriesFirst];
-  }, [events, eventFilters, clubs]);
+  const isLight = theme === 'light';
+  const cardClass = isLight ? 'bg-white border border-gray-200 shadow-sm' : 'bg-[#1a1c1e] border border-[#2a2c2e]';
+  const inputClass = isLight 
+    ? 'bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
+    : 'bg-[#14161a] border border-[#2a2c2e] text-gray-100 placeholder-gray-500 focus:border-blue-500';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAddEvent = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newEvent.title && newEvent.date && newEvent.clubId) {
-      const base: Omit<Event, 'id'> = {
+    if (!newEvent.title || !newEvent.date || !newEvent.courseId) {
+      toast.error('Please fill in required fields');
+      return;
+    }
+
+    try {
+      onAddEvent({
         title: newEvent.title,
         date: newEvent.date,
         time: newEvent.time || undefined,
         description: newEvent.description || undefined,
         location: newEvent.location || undefined,
-        clubId: newEvent.clubId,
-        recurrence: newEvent.recurrence
-          ? {
-              frequency: newEvent.frequency || 'weekly',
-              interval: newEvent.interval || 1,
-              count: newEvent.count ? parseInt(newEvent.count) : undefined,
-              until: newEvent.until || undefined,
-            }
-          : undefined,
-      };
-      try {
-          onAddEvent(base);
-        toast.success('Event added');
-        setNewEvent({
-        title: '',
-        date: '',
-        time: '',
-        description: '',
-        location: '',
-        clubId: '',
-        recurrence: false,
-        frequency: 'weekly',
-        interval: 1,
-        until: '',
-        count: '',
+        courseId: newEvent.courseId,
       });
-      } catch {
-          toast.error('Failed to add event');
+      toast.success('Deadline added!');
+      setNewEvent({ title: '', date: '', time: '', description: '', location: '', courseId: '' });
+    } catch (err) {
+      toast.error('Failed to add deadline');
+    }
+  };
+
+  const handleAddCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCourse.name) return;
+
+    try {
+      const created = await onAddClub?.({ ...newCourse });
+      if (created) {
+        toast.success(`Course "${created.name}" added!`);
+        setNewCourse({ name: '', color: '#10b981', grade: 'DP2' });
+      }
+    } catch (err) {
+      toast.error('Failed to add course');
+    }
+  };
+
+  const handleUpdateEvent = (eventId: string) => {
+    if (!editEventData.title || !editEventData.date || !editEventData.courseId) {
+      toast.error('Please fill in required fields');
+      return;
+    }
+
+    try {
+      onUpdateEvent?.(eventId, editEventData);
+      toast.success('Deadline updated!');
+      setEditingEvent(null);
+      setEditEventData({});
+    } catch (err) {
+      toast.error('Failed to update deadline');
+    }
+  };
+
+  const handleDeleteEvent = (eventId: string, eventTitle: string) => {
+    if (confirm(`Delete "${eventTitle}"?`)) {
+      try {
+        onDeleteEvent(eventId);
+        toast.success('Deadline deleted');
+      } catch (err) {
+        toast.error('Failed to delete deadline');
       }
     }
   };
 
-  const isLight = theme === 'light';
-  const fieldBase = 'w-full px-3 py-2 rounded-md focus:outline-none transition-colors';
-  const smallFieldBase = 'w-full px-2 py-1 rounded-md focus:outline-none transition-colors';
-  const fieldLight = 'bg-white border border-gray-300 text-gray-800 placeholder-gray-400 focus:border-gray-400';
-  const fieldDark = 'bg-[#1a1c1e] border border-[#2a2c2e] text-gray-200 placeholder-gray-500 focus:border-[#3a3c3e]';
-  const fieldClass = (small = false) => `${small ? smallFieldBase : fieldBase} ${isLight ? fieldLight : fieldDark}`;
+  const handleDeleteCourse = (courseId: string, courseName: string) => {
+    if (confirm(`Delete course "${courseName}" and all its deadlines?`)) {
+      try {
+        onDeleteClub?.(courseId);
+        toast.success('Course deleted');
+      } catch (err) {
+        toast.error('Failed to delete course');
+      }
+    }
+  };
 
-  const sectionCard = isLight
-    ? 'bg-gray-50 border border-gray-200 shadow-sm'
-    : 'bg-[#1a1c1e] border border-[#2a2c2e]';
+  const handleUpdateCourse = (courseId: string) => {
+    if (!editCourseData.name) {
+      toast.error('Course name is required');
+      return;
+    }
 
-  const listItem = isLight
-    ? 'bg-white border border-gray-200 hover:border-gray-300'
-    : 'bg-[#1a1c1e] border border-[#2a2c2e] hover:border-[#3a3c3e]';
+    try {
+      onUpdateClub?.(courseId, editCourseData);
+      toast.success('Course updated!');
+      setEditingCourse(null);
+      setEditCourseData({});
+    } catch (err) {
+      toast.error('Failed to update course');
+    }
+  };
+
+  // Sort events by date
+  const sortedEvents = [...events].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
-  <div className="space-y-6">
-    <div className="flex justify-end">
-      <button
-        onClick={() => window.open('/', '_blank')}
-        className={`${isLight ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'} px-4 py-2 rounded-md transition-colors font-medium flex items-center gap-2`}
-      >
-        <ExternalLink className="w-4 h-4" /> Open Calendar
-      </button>
-    </div>
-      <div className={`p-4 rounded-lg ${sectionCard}`}>
-        <h3 className={`text-lg font-medium mb-3 ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>Add New Event</h3>
-        <form onSubmit={handleSubmit} className="space-y-3">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className={`text-2xl font-bold ${isLight ? 'text-gray-900' : 'text-gray-100'}`}>
+          Admin Dashboard
+        </h2>
+        <button
+          onClick={() => window.open('/', '_blank')}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+        >
+          <ExternalLink className="w-4 h-4" /> View Calendar
+        </button>
+      </div>
+
+      {/* Add Deadline */}
+      <div className={`p-6 rounded-lg ${cardClass}`}>
+        <h3 className={`text-lg font-semibold mb-4 ${isLight ? 'text-gray-900' : 'text-gray-100'}`}>
+          Add New Deadline
+        </h3>
+        <form onSubmit={handleAddEvent} className="space-y-4">
           <input
             type="text"
-            placeholder="Event Title"
+            placeholder="Deadline Title *"
             value={newEvent.title}
             onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-            className={fieldClass()}
+            className={`w-full px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${inputClass}`}
             required
           />
-          {/* Date + Time are in the row below */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
-            <div className="col-span-2 flex gap-2 items-end">
-              <div className="flex-1">
-                <label className="text-xs text-gray-500 flex items-center gap-2"><CalendarIcon className="w-4 h-4" /> Date</label>
-                <input
-                  type="date"
-                  placeholder="Date"
-                  value={newEvent.date}
-                  onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                  className={fieldClass()}
-                  required
-                />
-              </div>
-              <div className="w-36">
-                <label className="text-xs text-gray-500 flex items-center gap-2"><Clock className="w-4 h-4" /> Time</label>
-                <input
-                  type="time"
-                  placeholder="Time"
-                  value={newEvent.time}
-                  onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
-                  className={fieldClass(true)}
-                  disabled={allDay}
-                />
-              </div>
-            </div>
-            <div className="col-span-1 flex items-center gap-2">
-              <input id="allDay" type="checkbox" checked={allDay} onChange={(e) => { setAllDay(e.target.checked); if (e.target.checked) setNewEvent({ ...newEvent, time: '' }); }} />
-              <label htmlFor="allDay" className={`text-sm ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>All-day</label>
-            </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="date"
+              value={newEvent.date}
+              onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+              className={`px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${inputClass}`}
+              required
+            />
+            <input
+              type="time"
+              value={newEvent.time}
+              onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+              className={`px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${inputClass}`}
+              placeholder="Time (optional)"
+            />
           </div>
-          <div className="text-xs text-gray-400 mt-1 mb-2">Tip: Toggle All-day to create an event without a time. Use the time selector to set a start time.</div>
+
+          <select
+            value={newEvent.courseId}
+            onChange={(e) => setNewEvent({ ...newEvent, courseId: e.target.value })}
+            className={`w-full px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${inputClass}`}
+            required
+          >
+            <option value="">Select Course *</option>
+            {clubs.map(course => (
+              <option key={course.id} value={course.id}>{course.name}</option>
+            ))}
+          </select>
+
           <textarea
             placeholder="Description (optional)"
             value={newEvent.description}
             onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-            className={`${fieldClass()} resize-none`}
-            rows={3}
+            className={`w-full px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 resize-none ${inputClass}`}
+            rows={2}
           />
+
           <input
             type="text"
             placeholder="Location (optional)"
             value={newEvent.location}
             onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-            className={fieldClass()}
+            className={`w-full px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${inputClass}`}
           />
-          <select
-            value={newEvent.clubId}
-            onChange={(e) => setNewEvent({ ...newEvent, clubId: e.target.value })}
-            className={fieldClass()}
-            required
+
+          <button
+            type="submit"
+            className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
           >
-            <option value="">Select Club</option>
-            {clubs.map(club => (
-              <option key={club.id} value={club.id}>{club.name}</option>
-            ))}
-          </select>
-          <div className={`space-y-3 pt-3 mt-2 ${isLight ? 'border-t border-gray-200' : 'border-t border-[#2a2c2e]'}`}>
-            <label className={`flex items-center gap-2 text-sm ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>
-              <input
-                type="checkbox"
-                checked={newEvent.recurrence}
-                onChange={(q) => setNewEvent({ ...newEvent, recurrence: q.target.checked })}
-              />
-              <Repeat className="w-4 h-4" />
-              Make this a recurring event
-            </label>
-            {newEvent.recurrence && (
-              <div className="space-y-3 pl-6 border-l-2 border-gray-300">
-                <div>
-                  <label className={`block text-sm font-medium mb-1 ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>Repeat every</label>
-                  <div className="flex gap-2 items-center">
-                    <input type="number" min={1} max={30} value={newEvent.interval} onChange={(e) => setNewEvent({ ...newEvent, interval: parseInt(e.target.value) || 1 })} className={fieldClass(true)} style={{ width: '60px' }} />
-                    <select className={fieldClass(true)} value={newEvent.frequency} onChange={(e) => setNewEvent({ ...newEvent, frequency: e.target.value as NewEventState['frequency'] })}>
-                      <option value="daily">day(s)</option>
-                      <option value="weekly">week(s)</option>
-                      <option value="monthly">month(s)</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className={`block text-sm font-medium mb-1 ${isLight ? 'text-gray-700' : 'text-gray-300'}`}>End after</label>
-                  <div className="flex gap-2 items-center">
-                    <input type="number" min={1} max={100} value={newEvent.count} onChange={(e) => setNewEvent({ ...newEvent, count: e.target.value })} className={fieldClass(true)} placeholder="occurrences" style={{ width: '100px' }} />
-                    <span className="text-sm text-gray-500">occurrences</span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">Or leave empty for no limit</div>
-                </div>
-              </div>
-            )}
+            <Plus className="w-4 h-4" /> Add Deadline
+          </button>
+        </form>
+      </div>
+
+      {/* Manage Courses */}
+      <div className={`p-6 rounded-lg ${cardClass}`}>
+        <h3 className={`text-lg font-semibold mb-4 ${isLight ? 'text-gray-900' : 'text-gray-100'}`}>
+          Manage Courses
+        </h3>
+        
+        <form onSubmit={handleAddCourse} className="mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <input
+              type="text"
+              placeholder="Course Name *"
+              value={newCourse.name}
+              onChange={(e) => setNewCourse({ ...newCourse, name: e.target.value })}
+              className={`px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${inputClass}`}
+              required
+            />
+            <select
+              value={newCourse.grade}
+              onChange={(e) => setNewCourse({ ...newCourse, grade: e.target.value })}
+              className={`px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${inputClass}`}
+            >
+              <option value="DP2">DP2</option>
+              <option value="DP1">DP1</option>
+            </select>
+            <input
+              type="color"
+              value={newCourse.color}
+              onChange={(e) => setNewCourse({ ...newCourse, color: e.target.value })}
+              className="h-10 w-full rounded-lg cursor-pointer"
+              title="Course Color"
+            />
             <button
               type="submit"
-              className="w-full px-4 py-2 bg-[#FF3B30] hover:bg-[#E5352B] text-white rounded-md transition-colors font-medium flex items-center justify-center gap-2"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
             >
-              <PlusCircle className="w-4 h-4" /> Add Event{newEvent.recurrence ? 's' : ''}
+              Add Course
             </button>
           </div>
         </form>
-      </div>
 
-      <div className={`p-4 rounded-lg ${sectionCard}`}>
-        <h3 className={`text-lg font-medium mb-3 ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>Clubs</h3>
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (!newClub.name) return;
-            try {
-              setAddingClub(true);
-              setClubStatus(null);
-              const created = await (onAddClub ? onAddClub({ name: newClub.name, color: newClub.color }) : undefined);
-              if (created && typeof created === 'object' && (created as Club).id) {
-                toast.success(`Created ${created.name}`);
-                setNewClub({ name: '', color: '#4ade80' });
-              } else {
-                toast.error('No club data returned from server');
-              }
-            } catch (err: unknown) {
-              let msg = 'Failed to create club';
-              if (err instanceof Error) msg = err.message;
-              else if (typeof err === 'string') msg = err;
-              toast.error(msg);
-            } finally {
-              setAddingClub(false);
-              setTimeout(() => setClubStatus(null), 3500);
-            }
-          }}
-          className="mb-3"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
-            <input
-              className={fieldClass()}
-              placeholder="Club name"
-              value={newClub.name}
-              onChange={(e) => setNewClub({ ...newClub, name: e.target.value })}
-            />
-            {/* slug is optional and will be generated from the name server-side */}
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                className="w-10 h-10 p-0 border-none rounded"
-                value={newClub.color}
-                onChange={(e) => setNewClub({ ...newClub, color: e.target.value })}
-                aria-label="Club color"
-              />
-              <div className="text-xs text-gray-500">Color</div>
-            </div>
-            <div className="flex justify-end">
-              <button
-                className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-b from-[#10b981] to-[#059669] hover:from-[#0ea56d] hover:to-[#04855a] text-white rounded shadow disabled:opacity-60"
-                type="submit"
-                disabled={addingClub || !newClub.name}
-              >
-                <PlusCircle className="w-4 h-4" /> {addingClub ? 'Adding…' : 'Add Club'}
-              </button>
-            </div>
-          </div>
-        </form>
-        {clubStatus && (
-          <div className={`text-sm ${clubStatus.type === 'success' ? 'text-green-600' : 'text-red-500'} mt-2`}>{clubStatus.message}</div>
-        )}
         <div className="space-y-2">
-          {clubs.map(club => (
-            <div key={club.id} className={`flex flex-wrap sm:flex-nowrap items-center gap-3 p-2 rounded-md ${listItem}`}>
-              {editingClub === club.id ? (
-                <>
-                  <input
-                    type="color"
-                    value={editClubData.color}
-                    onChange={(e) => setEditClubData({ ...editClubData, color: e.target.value })}
-                    className="w-10 h-10 p-0 border-none rounded"
-                  />
-                  <input
-                    type="text"
-                    value={editClubData.name}
-                    onChange={(e) => setEditClubData({ ...editClubData, name: e.target.value })}
-                    className={`${fieldClass()} flex-1`}
-                    placeholder="Club name"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        if (onUpdateClub && editClubData.name.trim()) {
-                          onUpdateClub(club.id, { name: editClubData.name.trim(), color: editClubData.color });
-                          toast.success('Club updated');
-                          setEditingClub(null);
-                        }
-                      }}
-                      className={`${isLight ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-green-500 hover:bg-green-600 text-white'} px-3 py-1 rounded text-sm flex items-center gap-2`}
-                    >
-                      <Save className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setEditingClub(null)}
-                      className={`${isLight ? 'bg-gray-200 hover:bg-gray-300 text-gray-800' : 'bg-[#222426] hover:bg-[#2a2c2f] text-gray-100'} px-3 py-1 rounded text-sm`}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <input
-                    type="color"
-                    value={club.color || '#ffffff'}
-                    onChange={(e) => {
-                      const color = e.target.value;
-                      if (onUpdateClub) onUpdateClub(club.id, { color });
-                    }}
-                    className="w-10 h-10 p-0 border-none rounded"
-                  />
-                  <div className="flex-1 min-w-[140px]">
-                    <div className={`font-medium ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>{club.name}</div>
-                    <div className={`text-xs ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{club.id}</div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setEditingClub(club.id);
-                        setEditClubData({ name: club.name, color: club.color || '#ffffff' });
-                      }}
-                      className={`${isLight ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'} px-3 py-1 rounded text-sm flex items-center gap-2`}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => { onUpdateClub?.(club.id, { color: club.color }); toast.success('Saved'); }}
-                      className={`${isLight ? 'bg-gray-200 hover:bg-gray-300 text-gray-800' : 'bg-[#222426] hover:bg-[#2a2c2f] text-gray-100'} px-3 py-1 rounded text-sm flex items-center gap-2`}
-                    >
-                      <Save className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => { if (confirm(`Delete club “${club.name}” and its events?`)) { onDeleteClub?.(club.id); toast.success('Deleted'); } }}
-                      className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm flex items-center gap-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+          {clubs.map(course => {
+            const isEditingThisCourse = editingCourse === course.id;
 
-      <div className={`p-4 rounded-lg ${sectionCard}`}>
-        <h3 className={`text-lg font-medium mb-3 ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>Existing Events</h3>
-        
-        <EventFilters
-          filters={eventFilters}
-          clubs={clubs}
-          onFilterChange={setEventFilters}
-          theme={theme}
-          compact={true}
-        />
-        
-        <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-          {displayedEvents.length === 0 ? (
-            <div className={`text-center py-8 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
-              No events match your filters
-            </div>
-          ) : (
-            displayedEvents.map(event => {
-              const club = clubs.find(c => c.id === event.clubId);
+            if (isEditingThisCourse) {
               return (
-              <div key={event.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-md transition-colors ${listItem}`}>
-                {editingEvent === event.id ? (
-                  <div className="flex-1 space-y-2">
+                <div key={course.id} className={`p-4 rounded-lg border-2 border-blue-500 ${isLight ? 'bg-blue-50' : 'bg-blue-900/10'}`}>
+                  <div className="space-y-3">
                     <input
                       type="text"
-                      value={editEventData.title}
-                      onChange={(e) => setEditEventData({ ...editEventData, title: e.target.value })}
-                      className={fieldClass()}
-                      placeholder="Event Title"
+                      value={editCourseData.name || ''}
+                      onChange={(e) => setEditCourseData({ ...editCourseData, name: e.target.value })}
+                      className={`w-full px-3 py-2 rounded-lg outline-none ${inputClass}`}
+                      placeholder="Course Name"
                     />
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-2 gap-3">
+                      <select
+                        value={editCourseData.grade || 'DP2'}
+                        onChange={(e) => setEditCourseData({ ...editCourseData, grade: e.target.value })}
+                        className={`px-3 py-2 rounded-lg outline-none ${inputClass}`}
+                      >
+                        <option value="DP2">DP2</option>
+                        <option value="DP1">DP1</option>
+                      </select>
                       <input
-                        type="date"
-                        value={editEventData.date}
-                        onChange={(e) => setEditEventData({ ...editEventData, date: e.target.value })}
-                        className={fieldClass(true)}
-                      />
-                      <input
-                        type="time"
-                        value={editEventData.time}
-                        onChange={(e) => setEditEventData({ ...editEventData, time: e.target.value })}
-                        className={fieldClass(true)}
+                        type="color"
+                        value={editCourseData.color || '#10b981'}
+                        onChange={(e) => setEditCourseData({ ...editCourseData, color: e.target.value })}
+                        className="h-10 w-full rounded-lg cursor-pointer"
                       />
                     </div>
-                    <textarea
-                      value={editEventData.description}
-                      onChange={(e) => setEditEventData({ ...editEventData, description: e.target.value })}
-                      className={`${fieldClass()} resize-none`}
-                      rows={2}
-                      placeholder="Description"
-                    />
-                    <input
-                      type="text"
-                      value={editEventData.location}
-                      onChange={(e) => setEditEventData({ ...editEventData, location: e.target.value })}
-                      className={fieldClass()}
-                      placeholder="Location"
-                    />
-                    <select
-                      value={editEventData.clubId}
-                      onChange={(e) => setEditEventData({ ...editEventData, clubId: e.target.value })}
-                      className={fieldClass()}
-                    >
-                      <option value="">Select Club</option>
-                      {clubs.map(club => (
-                        <option key={club.id} value={club.id}>{club.name}</option>
-                      ))}
-                    </select>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => {
-                          if (editEventData.title && editEventData.date && editEventData.clubId) {
-                            if (onUpdateEvent) {
-                              onUpdateEvent(event.id, {
-                                title: editEventData.title,
-                                date: editEventData.date,
-                                time: editEventData.time || undefined,
-                                description: editEventData.description || undefined,
-                                location: editEventData.location || undefined,
-                                clubId: editEventData.clubId
-                              });
-                              toast.success('Event updated');
-                              setEditingEvent(null);
-                            }
-                          }
-                        }}
-                        className={`${isLight ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-green-500 hover:bg-green-600 text-white'} px-3 py-1 rounded text-sm flex items-center gap-2`}
+                        onClick={() => handleUpdateCourse(course.id)}
+                        className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                       >
-                        <Save className="w-4 h-4" />
+                        Save
                       </button>
                       <button
-                        onClick={() => setEditingEvent(null)}
-                        className={`${isLight ? 'bg-gray-200 hover:bg-gray-300 text-gray-800' : 'bg-[#222426] hover:bg-[#2a2c2f] text-gray-100'} px-3 py-1 rounded text-sm`}
+                        onClick={() => { setEditingCourse(null); setEditCourseData({}); }}
+                        className="flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
                       >
                         Cancel
                       </button>
                     </div>
                   </div>
-                ) : (
-                  <>
-                    <div className="flex-1 min-w-0 mb-2 sm:mb-0 flex items-center gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className={`font-medium truncate flex items-center gap-2 ${isLight ? 'text-gray-800' : 'text-gray-200'}`}>
-                          {event.title}
-                          {(event.recurrenceFrequency || event.recurrenceGroupId) && (
-                            <span title="Recurring event">
-                              <Repeat className="w-4 h-4 text-blue-500" />
-                            </span>
-                          )}
-                        </div>
-                        <div className={`text-sm ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{mounted ? new Date(event.date).toDateString() : ''} {event.time}</div>
-                        {event.location && <div className={`text-xs ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>📍 {event.location}</div>}
-                        {club && <div className={`text-xs mt-0.5 ${isLight ? 'text-gray-500' : 'text-gray-500'}`}>{club.name}</div>}
-                        {(event.recurrenceFrequency || event.recurrenceGroupId) && (
-                          <div className={`text-xs mt-0.5 ${isLight ? 'text-blue-600' : 'text-blue-400'}`}>
-                            🔄 Recurring ({event.recurrenceFrequency?.toLowerCase() || 'series'})
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setEditingEvent(event.id);
-                          setEditEventData({
-                            title: event.title,
-                            date: event.date,
-                            time: event.time || '',
-                            description: event.description || '',
-                            location: event.location || '',
-                            clubId: event.clubId,
-                            recurrence: !!event.recurrence,
-                            frequency: event.recurrence?.frequency || 'weekly',
-                            interval: event.recurrence?.interval || 1,
-                            until: event.recurrence?.until || '',
-                            count: event.recurrence?.count?.toString() || ''
-                          });
-                        }}
-                        className={`${isLight ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'} px-3 py-1 rounded text-sm flex items-center gap-2`}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          const isRecurring = event.recurrenceGroupId || event.recurrenceFrequency;
-                          const confirmMsg = isRecurring
-                            ? 'This is a recurring event. Deleting will remove ALL occurrences in this series. Continue?'
-                            : 'Delete event?';
-                          if (confirm(confirmMsg)) {
-                            onDeleteEvent(event.id);
-                            toast.success(isRecurring ? 'Deleted recurring series' : 'Deleted event');
-                          }
-                        }}
-                        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors flex-shrink-0 flex items-center gap-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </>
-                )}
+                </div>
+              );
+            }
+
+            return (
+              <div
+                key={course.id}
+                className={`flex items-center justify-between p-3 rounded-lg ${isLight ? 'bg-gray-50 hover:bg-gray-100' : 'bg-[#14161a] hover:bg-[#1a1c20]'} transition-colors`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-4 h-4 rounded"
+                    style={{ backgroundColor: course.color }}
+                  />
+                  <span className={isLight ? 'text-gray-900' : 'text-gray-100'}>{course.name}</span>
+                  <span className={`text-xs px-2 py-1 rounded ${isLight ? 'bg-gray-200 text-gray-700' : 'bg-[#2a2c2e] text-gray-400'}`}>
+                    {course.grade}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setEditingCourse(course.id);
+                      setEditCourseData({
+                        name: course.name,
+                        color: course.color,
+                        grade: course.grade,
+                      });
+                    }}
+                    className="p-2 hover:bg-blue-500/10 text-blue-500 rounded-lg transition-colors"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteCourse(course.id, course.name)}
+                    className="p-2 hover:bg-red-500/10 text-red-500 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             );
-          })
+          })}
+        </div>
+      </div>
+
+      {/* Manage Deadlines */}
+      <div className={`p-6 rounded-lg ${cardClass}`}>
+        <h3 className={`text-lg font-semibold mb-4 ${isLight ? 'text-gray-900' : 'text-gray-100'}`}>
+          All Deadlines ({sortedEvents.length})
+        </h3>
+        
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {sortedEvents.length === 0 ? (
+            <p className={`text-center py-8 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
+              No deadlines yet. Add one above!
+            </p>
+          ) : (
+            sortedEvents.map(event => {
+              const course = clubs.find(c => c.id === event.courseId);
+              const isEditing = editingEvent === event.id;
+
+              if (isEditing) {
+                return (
+                  <div key={event.id} className={`p-4 rounded-lg border-2 border-blue-500 ${isLight ? 'bg-blue-50' : 'bg-blue-900/10'}`}>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={editEventData.title || ''}
+                        onChange={(e) => setEditEventData({ ...editEventData, title: e.target.value })}
+                        className={`w-full px-3 py-2 rounded-lg outline-none ${inputClass}`}
+                        placeholder="Title"
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          type="date"
+                          value={editEventData.date || ''}
+                          onChange={(e) => setEditEventData({ ...editEventData, date: e.target.value })}
+                          className={`px-3 py-2 rounded-lg outline-none ${inputClass}`}
+                        />
+                        <input
+                          type="time"
+                          value={editEventData.time || ''}
+                          onChange={(e) => setEditEventData({ ...editEventData, time: e.target.value })}
+                          className={`px-3 py-2 rounded-lg outline-none ${inputClass}`}
+                        />
+                      </div>
+                      <select
+                        value={editEventData.courseId || ''}
+                        onChange={(e) => setEditEventData({ ...editEventData, courseId: e.target.value })}
+                        className={`w-full px-3 py-2 rounded-lg outline-none ${inputClass}`}
+                      >
+                        {clubs.map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleUpdateEvent(event.id)}
+                          className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => { setEditingEvent(null); setEditEventData({}); }}
+                          className="flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={event.id}
+                  className={`flex items-center justify-between p-3 rounded-lg ${isLight ? 'bg-gray-50 hover:bg-gray-100' : 'bg-[#14161a] hover:bg-[#1a1c20]'} transition-colors`}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      {course && (
+                        <div
+                          className="w-3 h-3 rounded"
+                          style={{ backgroundColor: course.color }}
+                        />
+                      )}
+                      <span className={`font-medium ${isLight ? 'text-gray-900' : 'text-gray-100'}`}>
+                        {event.title}
+                      </span>
+                    </div>
+                    <div className={`text-sm ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>
+                      {event.date} {event.time && `at ${event.time}`} • {course?.name || 'Unknown'}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingEvent(event.id);
+                        setEditEventData({
+                          title: event.title,
+                          date: event.date,
+                          time: event.time,
+                          courseId: event.courseId,
+                          description: event.description,
+                          location: event.location,
+                        });
+                      }}
+                      className="p-2 hover:bg-blue-500/10 text-blue-500 rounded-lg transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteEvent(event.id, event.title)}
+                      className="p-2 hover:bg-red-500/10 text-red-500 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
       </div>
-      <Toaster />
     </div>
   );
 };

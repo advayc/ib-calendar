@@ -37,23 +37,30 @@ function isAuthorizedDevFallback(req: NextRequest) {
 }
 
 export async function GET() {
-  const clubs = await prisma.club.findMany({ orderBy: { name: 'asc' } });
-  return NextResponse.json(clubs);
+  const courses = await prisma.course.findMany({ orderBy: { name: 'asc' } });
+  return NextResponse.json(courses);
 }
 
 export async function POST(req: NextRequest) {
   if (!isAuthorizedDevFallback(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const body = await req.json();
-  const { name, slug, color } = body;
+  const { name, slug, color, grade } = body;
   if (!name) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   const finalSlug = slug && String(slug).trim() ? String(slug).trim() : slugify(name);
   try {
-    const club = await prisma.club.create({ data: { name, slug: finalSlug, color: color || '#007AFF' } });
-    return NextResponse.json(club, { status: 201 });
+    const course = await prisma.course.create({ 
+      data: { 
+        name, 
+        slug: finalSlug, 
+        color: color || '#007AFF',
+        grade: grade || 'DP2'
+      } 
+    });
+    return NextResponse.json(course, { status: 201 });
   } catch (e: any) {
     // Log full error for debugging
-    console.error('[api/clubs] create error:', e);
+    console.error('[api/courses] create error:', e);
     // Handle Prisma unique constraint (slug) error more nicely
     if (e?.code === 'P2002' && Array.isArray(e?.meta?.target) && e.meta.target.includes('slug')) {
       return NextResponse.json({ error: 'Slug already exists' }, { status: 409 });
@@ -71,8 +78,8 @@ export async function PATCH(req: NextRequest) {
   const { id, ...updates } = body;
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
   try {
-    const club = await prisma.club.update({ where: { id }, data: updates });
-    return NextResponse.json(club);
+    const course = await prisma.course.update({ where: { id }, data: updates });
+    return NextResponse.json(course);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
@@ -84,7 +91,7 @@ export async function DELETE(req: NextRequest) {
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
   try {
-    await prisma.club.delete({ where: { id } });
+    await prisma.course.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

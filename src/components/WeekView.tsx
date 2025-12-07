@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, addWeeks, subWeeks } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Event, Club } from '@/types';
-import { useClubs } from '@/context/ClubContext';
+import { useCourses } from '@/context/CourseContext';
 import EventCard from './EventCard';
 
 interface WeekViewProps {
@@ -17,7 +17,7 @@ interface WeekViewProps {
 }
 
 const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateChange, onSelectEvent, theme = 'light' }) => {
-  const { enabledClubIds, prioritizedClubIds } = useClubs();
+  const { enabledCourseIds } = useCourses();
 
   const clubsMap = useMemo(() => {
     return clubs.reduce((acc, club) => {
@@ -27,8 +27,8 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
   }, [clubs]);
 
   const filteredEvents = useMemo(() => {
-    return events.filter(event => enabledClubIds.includes(event.clubId));
-  }, [events, enabledClubIds]);
+    return events.filter(event => enabledCourseIds.includes(event.courseId));
+  }, [events, enabledCourseIds]);
 
   const weekDays = useMemo(() => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
@@ -87,13 +87,9 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
       }
     });
 
-    // Sort events in each day: prioritized first, then by time
+    // Sort events in each day by time
     Object.keys(grouped).forEach(dateKey => {
       grouped[dateKey].sort((a, b) => {
-        const aPrior = prioritizedClubIds.includes(a.clubId);
-        const bPrior = prioritizedClubIds.includes(b.clubId);
-        if (aPrior && !bPrior) return -1;
-        if (!aPrior && bPrior) return 1;
         const aTime = a.time || '';
         const bTime = b.time || '';
         if (aTime && bTime) return aTime.localeCompare(bTime);
@@ -104,7 +100,7 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
     });
 
     return grouped;
-  }, [weekDays, filteredEvents, prioritizedClubIds]);
+  }, [weekDays, filteredEvents]);
 
   const handlePreviousWeek = () => {
     onDateChange(subWeeks(currentDate, 1));
@@ -287,7 +283,7 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
 
                       // Render events, stacking those with the same time vertically
                       return dayEvents.map((event, eventIndex) => {
-                        const club = clubsMap[event.clubId];
+                        const club = clubsMap[event.courseId];
                         if (!club) return null;
                         
                         // Calculate position based on time
@@ -333,7 +329,6 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
                               event={event}
                               club={club}
                               theme={theme}
-                              isPrioritized={prioritizedClubIds.includes(event.clubId)}
                               onClick={() => onSelectEvent?.(event)}
                             />
                           </div>

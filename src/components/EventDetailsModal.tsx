@@ -9,7 +9,7 @@ interface Props {
 }
 
 const EventDetailsModal: React.FC<Props> = ({ event, clubs, theme, onClose }) => {
-  const club = clubs.find(c => c.id === event.clubId);
+  const club = clubs.find(c => c.id === event.courseId);
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
       <div

@@ -1,11 +1,11 @@
-import { Event, Club } from '@/types';
+import { Event, Course } from '@/types';
 import { EventFilterState } from '@/components/EventFilters';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, isWithinInterval, isBefore } from 'date-fns';
 
 export function applyEventFilters(
   events: Event[],
   filters: EventFilterState,
-  clubs: Club[]
+  courses: Course[]
 ): Event[] {
   let filtered = [...events];
 
@@ -20,9 +20,9 @@ export function applyEventFilters(
     });
   }
 
-  // Club filter
+  // Course filter
   if (filters.clubIds.length > 0) {
-    filtered = filtered.filter(event => filters.clubIds.includes(event.clubId));
+    filtered = filtered.filter(event => filters.clubIds.includes(event.courseId));
   }
 
   // Date range filter
@@ -104,10 +104,10 @@ export function applyEventFilters(
   filtered = typeFiltered;
 
   // Sort
-  const clubsMap = clubs.reduce((acc, club) => {
-    acc[club.id] = club;
+  const coursesMap = courses.reduce((acc, course) => {
+    acc[course.id] = course;
     return acc;
-  }, {} as Record<string, Club>);
+  }, {} as Record<string, Course>);
 
   filtered.sort((a, b) => {
     switch (filters.sortBy) {
@@ -118,9 +118,9 @@ export function applyEventFilters(
       case 'name-asc':
         return a.title.localeCompare(b.title);
       case 'club-asc': {
-        const clubA = clubsMap[a.clubId]?.name || '';
-        const clubB = clubsMap[b.clubId]?.name || '';
-        return clubA.localeCompare(clubB);
+        const courseA = coursesMap[a.courseId]?.name || '';
+        const courseB = coursesMap[b.courseId]?.name || '';
+        return courseA.localeCompare(courseB);
       }
       default:
         return 0;

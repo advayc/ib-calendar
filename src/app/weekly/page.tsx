@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import WeekView from '@/components/WeekView';
 import DayView from '@/components/DayView';
-import ClubFilter from '@/components/ClubFilter';
+import CourseFilter from '@/components/CourseFilter';
 import ViewSelector from '@/components/ViewSelector';
-import { ClubProvider } from '@/context/ClubContext';
-import { Event, Club } from '@/types';
+import { CourseProvider } from '@/context/CourseContext';
+import { Event, Course } from '@/types';
 import { apiClient } from '@/lib/apiClient';
 import { Toaster } from 'react-hot-toast';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
@@ -20,7 +20,7 @@ const WeeklyCalendarPage: React.FC = () => {
   const router = useRouter();
 
   const [events, setEvents] = useState<Event[]>([]);
-  const [clubs, setClubs] = useState<Club[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [activeDate, setActiveDate] = useState<Date>(new Date());
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -36,15 +36,15 @@ const WeeklyCalendarPage: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const [remoteEvents, remoteClubs] = await Promise.all([
+        const [remoteEvents, remoteCourses] = await Promise.all([
           apiClient.get<Event[]>('/api/events'),
-          apiClient.get<Club[]>('/api/clubs')
+          apiClient.get<Course[]>('/api/courses')
         ]);
         setEvents(remoteEvents.map((e) => ({ ...e, date: e.date?.slice(0,10) })));
-        setClubs(remoteClubs.map((c) => ({ id: c.id, name: c.name, color: c.color, enabled: c.enabled, prioritized: c.prioritized || false })));
+        setCourses(remoteCourses.map((c) => ({ id: c.id, name: c.name, color: c.color, enabled: c.enabled, grade: c.grade || 'DP2', prioritized: c.prioritized || false })));
       } catch {
         setEvents([]);
-        setClubs([]);
+        setCourses([]);
       }
     };
     load();
@@ -66,7 +66,7 @@ const WeeklyCalendarPage: React.FC = () => {
   };
 
   return (
-    <ClubProvider initialClubs={clubs}>
+    <CourseProvider initialCourses={courses}>
       <div suppressHydrationWarning className={`min-h-screen flex flex-col md:flex-row text-sm transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#101215] text-gray-200'}`}>
         {/* Sidebar */}
         <div
@@ -74,7 +74,7 @@ const WeeklyCalendarPage: React.FC = () => {
           style={{ width: sidebarCollapsed ? (typeof window !== 'undefined' && window.innerWidth >= 768 ? '0' : '250px') : '250px' }}
         >
           {!sidebarCollapsed && (
-            <ClubFilter activeDate={activeDate} onChangeDate={setActiveDate} theme={theme} />
+            <CourseFilter activeDate={activeDate} onChangeDate={setActiveDate} theme={theme} />
           )}
         </div>
 
@@ -110,7 +110,7 @@ const WeeklyCalendarPage: React.FC = () => {
           {currentView === 'week' ? (
             <WeekView
               events={events}
-              clubs={clubs}
+              clubs={courses}
               currentDate={activeDate}
               onDateChange={setActiveDate}
               onSelectEvent={(e) => setSelectedEvent(e)}
@@ -119,7 +119,7 @@ const WeeklyCalendarPage: React.FC = () => {
           ) : (
             <DayView
               events={events}
-              clubs={clubs}
+              clubs={courses}
               currentDate={activeDate}
               onDateChange={setActiveDate}
               onSelectEvent={(e) => setSelectedEvent(e)}
@@ -131,10 +131,10 @@ const WeeklyCalendarPage: React.FC = () => {
         <Toaster />
 
         {selectedEvent && (
-          <EventDetailsModal event={selectedEvent} clubs={clubs} theme={theme} onClose={() => setSelectedEvent(null)} />
+          <EventDetailsModal event={selectedEvent} clubs={courses} theme={theme} onClose={() => setSelectedEvent(null)} />
         )}
       </div>
-    </ClubProvider>
+    </CourseProvider>
   );
 };
 

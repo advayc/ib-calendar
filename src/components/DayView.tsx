@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { format, addDays, subDays } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Event, Club } from '@/types';
-import { useClubs } from '@/context/ClubContext';
+import { useCourses } from '@/context/CourseContext';
 import EventCard from './EventCard';
 
 interface DayViewProps {
@@ -17,7 +17,7 @@ interface DayViewProps {
 }
 
 const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateChange, onSelectEvent, theme = 'light' }) => {
-  const { enabledClubIds, prioritizedClubIds } = useClubs();
+  const { enabledCourseIds } = useCourses();
 
   const clubsMap = useMemo(() => {
     return clubs.reduce((acc, club) => {
@@ -27,8 +27,8 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
   }, [clubs]);
 
   const filteredEvents = useMemo(() => {
-    return events.filter(event => enabledClubIds.includes(event.clubId));
-  }, [events, enabledClubIds]);
+    return events.filter(event => enabledCourseIds.includes(event.courseId));
+  }, [events, enabledCourseIds]);
 
   const dayEvents = useMemo(() => {
     const dateKey = format(currentDate, 'yyyy-MM-dd');
@@ -37,12 +37,8 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
       return eventDate === dateKey;
     });
 
-    // Sort events: prioritized first, then by time
+    // Sort events by time
     eventsForDay.sort((a, b) => {
-      const aPrior = prioritizedClubIds.includes(a.clubId);
-      const bPrior = prioritizedClubIds.includes(b.clubId);
-      if (aPrior && !bPrior) return -1;
-      if (!aPrior && bPrior) return 1;
       const aTime = a.time || '';
       const bTime = b.time || '';
       if (aTime && bTime) return aTime.localeCompare(bTime);
@@ -52,7 +48,7 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
     });
 
     return eventsForDay;
-  }, [currentDate, filteredEvents, prioritizedClubIds]);
+  }, [currentDate, filteredEvents]);
 
   // Current time position for the red line indicator
   const [currentTimePosition, setCurrentTimePosition] = React.useState<number | null>(null);
@@ -238,7 +234,7 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
 
               // Render events, stacking those with the same time vertically
               return dayEvents.map((event, eventIndex) => {
-                const club = clubsMap[event.clubId];
+                const club = clubsMap[event.courseId];
                 if (!club) return null;
                 
                 // Calculate position based on time
@@ -284,7 +280,6 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
                       event={event}
                       club={club}
                       theme={theme}
-                      isPrioritized={prioritizedClubIds.includes(event.clubId)}
                       onClick={() => onSelectEvent?.(event)}
                     />
                   </div>

@@ -6,6 +6,7 @@
     "dev": "next dev",
     "migrate:supabase": "node scripts/migrate-to-supabase.js",
     "verify:db": "node scripts/verify-db-connection.js",
+    "setup": "node scripts/setup-migration.js",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

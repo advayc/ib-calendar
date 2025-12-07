@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Calendar from '@/components/Calendar';
-import ClubFilter from '@/components/ClubFilter';
+import CourseFilter from '@/components/CourseFilter';
 // AdminPanel moved to a secret route; keep main app lean
-import { ClubProvider } from '@/context/ClubContext';
-import { Event, Club } from '@/types';
+import { CourseProvider } from '@/context/CourseContext';
+import { Event, Course } from '@/types';
 import { apiClient } from '@/lib/apiClient';
 import { Toaster } from 'react-hot-toast';
 import { PanelLeftOpen } from 'lucide-react';
@@ -17,7 +17,7 @@ const CalendarApp: React.FC = () => {
   const THEME_KEY = 'gfs-theme';
 
   const [events, setEvents] = useState<Event[]>([]);
-  const [clubs, setClubs] = useState<Club[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   // admin token and login handled on the secret admin route
   // loadingData intentionally removed; we show minimal loading states elsewhere if needed
   const [activeDate, setActiveDate] = useState<Date>(new Date());
@@ -33,7 +33,7 @@ const CalendarApp: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   // Sidebar toggle for desktop
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  // Mobile sidebar (club filter) visibility
+  // Mobile sidebar (course filter) visibility
   const [showFilters, setShowFilters] = useState(false);
   // Dragging state for desktop sidebar (allows pushing left to hide)
   const sidebarRef = useRef<HTMLDivElement | null>(null);
@@ -45,17 +45,17 @@ const CalendarApp: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const [remoteEvents, remoteClubs] = await Promise.all([
+        const [remoteEvents, remoteCourses] = await Promise.all([
           apiClient.get<Event[]>('/api/events'),
-          apiClient.get<Club[]>('/api/clubs')
+          apiClient.get<Course[]>('/api/courses')
         ]);
         // Normalize date -> string (ISO) for existing UI
         setEvents(remoteEvents.map((e) => ({ ...e, date: e.date?.slice(0,10) })));
-        setClubs(remoteClubs.map((c) => ({ id: c.id, name: c.name, color: c.color, enabled: c.enabled, prioritized: c.prioritized || false })));
+        setCourses(remoteCourses.map((c) => ({ id: c.id, name: c.name, color: c.color, enabled: c.enabled, grade: c.grade || 'DP2', prioritized: c.prioritized || false })));
       } catch {
         // fallback to empty lists
         setEvents([]);
-        setClubs([]);
+        setCourses([]);
       }
     };
     load();
@@ -113,7 +113,7 @@ const CalendarApp: React.FC = () => {
   // handleEditEvent removed: editing happens in admin panel only
 
   return (
-    <ClubProvider initialClubs={clubs}>
+    <CourseProvider initialCourses={courses}>
   <div suppressHydrationWarning className={`min-h-screen flex flex-col md:flex-row text-sm transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#101215] text-gray-200 border-r border-[#1e2022]'}`}>
         {/* Sidebar (desktop) / Drawer (mobile) */}
         <div
@@ -127,7 +127,7 @@ const CalendarApp: React.FC = () => {
         > 
           {!sidebarCollapsed && (
             <>
-              <ClubFilter activeDate={activeDate} onChangeDate={(d) => { setActiveDate(d); if (showFilters) setShowFilters(false); }} theme={theme} />
+              <CourseFilter activeDate={activeDate} onChangeDate={(d) => { setActiveDate(d); if (showFilters) setShowFilters(false); }} theme={theme} />
               {/* Drag handle on the right edge */}
               <div 
                 className="hidden md:block absolute top-0 right-0 w-2 h-full cursor-ew-resize hover:bg-blue-500 transition-colors"
@@ -169,7 +169,7 @@ const CalendarApp: React.FC = () => {
         <div className="flex-1 flex flex-col relative">
           <Calendar
             events={events}
-            clubs={clubs}
+            clubs={courses}
             controlledDate={activeDate}
             onDateChange={setActiveDate}
             onSelectEvent={(e) => setSelectedEvent(e)}
@@ -183,7 +183,7 @@ const CalendarApp: React.FC = () => {
             <button
               onClick={() => setShowFilters(s => !s)}
               className={`rounded-full px-4 py-2 shadow-lg text-xs font-medium border ${theme === 'light' ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100' : 'bg-[#16181a] border-[#2a2c2e] text-gray-200 hover:bg-[#1f2225]'}`}
-              aria-label="Toggle club filters"
+              aria-label="Toggle course filters"
             >{showFilters ? 'Close Filters' : 'Filters'}</button>
             <button
               onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
@@ -196,12 +196,12 @@ const CalendarApp: React.FC = () => {
         {/* Admin UI moved to /glenforestsacadmindash */}
 
         {selectedEvent && (
-          <EventDetailsModal event={selectedEvent} clubs={clubs} theme={theme} onClose={() => setSelectedEvent(null)} />
+          <EventDetailsModal event={selectedEvent} clubs={courses} theme={theme} onClose={() => setSelectedEvent(null)} />
         )}
 
         {/* Admin Panel */}
       </div>
-    </ClubProvider>
+    </CourseProvider>
   );
 };
 

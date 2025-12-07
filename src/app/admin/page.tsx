@@ -4,14 +4,14 @@ import React, { useEffect, useState, useCallback } from 'react';
 import AdminPanel from '@/components/AdminPanel';
 import LoginForm from '@/components/LoginForm';
 import { apiClient } from '@/lib/apiClient';
-import { Event, Club } from '@/types';
+import { Event, Course } from '@/types';
 
 const STORAGE_KEY = 'gfs-admin-token';
 
 const AdminPage: React.FC = () => {
   const [adminToken, setAdminToken] = useState<string | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
-  const [clubs, setClubs] = useState<Club[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   // loading state removed (not used)
   const [loginError, setLoginError] = useState<string | null>(null);
   // Initialize to a stable value for SSR to avoid hydration mismatch; hydrate from localStorage after mount
@@ -34,9 +34,9 @@ const AdminPage: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       try {
-  const [evs, cls] = await Promise.all([apiClient.get<Event[]>('/api/events'), apiClient.get<Club[]>('/api/clubs')]);
+  const [evs, crs] = await Promise.all([apiClient.get<Event[]>('/api/events'), apiClient.get<Course[]>('/api/courses')]);
   setEvents(evs.map((e) => ({ ...e, date: e.date?.slice?.(0,10) || e.date })));
-  setClubs(cls.map((c) => ({ id: c.id, name: c.name, color: c.color, enabled: c.enabled })));
+  setCourses(crs.map((c) => ({ id: c.id, name: c.name, color: c.color, enabled: c.enabled, grade: c.grade || 'DP2' })));
       } catch (err) {
         console.error('Load failed', err);
       }
@@ -99,27 +99,27 @@ const AdminPage: React.FC = () => {
     }
   }, [adminToken, events]);
 
-  const handleAddClub = useCallback(async (club: { name: string; slug?: string; color?: string }) => {
+  const handleAddCourse = useCallback(async (course: { name: string; slug?: string; color?: string; grade?: string }) => {
     if (adminToken) apiClient.setToken(adminToken);
     try {
-      const created = await apiClient.post<Club>('/api/clubs', club);
-      setClubs(prev => [...prev, { id: created.id, name: created.name, color: created.color, enabled: created.enabled }]);
+      const created = await apiClient.post<Course>('/api/courses', course);
+      setCourses(prev => [...prev, { id: created.id, name: created.name, color: created.color, enabled: created.enabled, grade: created.grade || 'DP2' }]);
       return created;
     } catch (err) {
-      console.error('Add club failed', err);
+      console.error('Add course failed', err);
       // rethrow so UI shows the error
       throw err;
     }
   }, [adminToken]);
 
-  const handleDeleteClub = useCallback(async (clubId: string) => {
+  const handleDeleteCourse = useCallback(async (courseId: string) => {
     if (adminToken) apiClient.setToken(adminToken);
-    try { await apiClient.delete(`/api/clubs?id=${clubId}`); setClubs(prev => prev.filter(c => c.id !== clubId)); setEvents(prev => prev.filter(e => e.clubId !== clubId)); } catch (err) { console.error('Delete club failed', err); }
+    try { await apiClient.delete(`/api/courses?id=${courseId}`); setCourses(prev => prev.filter(c => c.id !== courseId)); setEvents(prev => prev.filter(e => e.courseId !== courseId)); } catch (err) { console.error('Delete course failed', err); }
   }, [adminToken]);
 
-  const handleUpdateClub = useCallback(async (clubId: string, changes: Partial<Club>) => {
+  const handleUpdateCourse = useCallback(async (courseId: string, changes: Partial<Course>) => {
     if (adminToken) apiClient.setToken(adminToken);
-    try { const updated = await apiClient.patch<Club>('/api/clubs', { id: clubId, ...changes }); setClubs(prev => prev.map(c => c.id === clubId ? { ...c, ...updated } : c)); } catch (err) { console.error('Update club failed', err); }
+    try { const updated = await apiClient.patch<Course>('/api/courses', { id: courseId, ...changes }); setCourses(prev => prev.map(c => c.id === courseId ? { ...c, ...updated } : c)); } catch (err) { console.error('Update course failed', err); }
   }, [adminToken]);
 
   const handleUpdateEvent = useCallback(async (eventId: string, changes: Partial<Event>) => {
@@ -133,7 +133,7 @@ const AdminPage: React.FC = () => {
         <h1 className="text-xl sm:text-2xl font-semibold mb-4">Admin Dashboard (Secret)</h1>
         {!adminToken ? (
           <div className="w-full max-w-md p-5 sm:p-6 rounded shadow-sm border bg-white/5">
-            <p className="text-sm mb-3">Enter admin credentials to manage events and clubs.</p>
+            <p className="text-sm mb-3">Enter admin credentials to manage events and courses.</p>
             <LoginForm onSubmit={handleLogin} error={loginError} loading={false} theme={theme} />
           </div>
         ) : (
@@ -162,7 +162,7 @@ const AdminPage: React.FC = () => {
                 </button>
               </div>
             </div>
-            <AdminPanel events={events} clubs={clubs} onAddEvent={handleAddEvent} onDeleteEvent={handleDeleteEvent} onUpdateClub={handleUpdateClub} onUpdateEvent={handleUpdateEvent} onAddClub={handleAddClub} onDeleteClub={handleDeleteClub} theme={theme} />
+            <AdminPanel events={events} clubs={courses} onAddEvent={handleAddEvent} onDeleteEvent={handleDeleteEvent} onUpdateClub={handleUpdateCourse} onUpdateEvent={handleUpdateEvent} onAddClub={handleAddCourse} onDeleteClub={handleDeleteCourse} theme={theme} />
           </div>
         )}
       </div>
