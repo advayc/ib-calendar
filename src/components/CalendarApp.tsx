@@ -114,11 +114,11 @@ const CalendarApp: React.FC = () => {
 
   return (
     <CourseProvider initialCourses={courses}>
-  <div suppressHydrationWarning className={`min-h-screen flex flex-col md:flex-row text-sm transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#101215] text-gray-200 border-r border-[#1e2022]'}`}>
+  <div suppressHydrationWarning className={`min-h-screen flex flex-col md:flex-row text-sm transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#191919] text-gray-200 border-r border-[#1e2022]'}`}>
         {/* Sidebar (desktop) / Drawer (mobile) */}
         <div
           ref={sidebarRef}
-          className={`md:flex-shrink-0 md:h-auto md:static fixed top-0 left-0 h-full transform ${sidebarCollapsed ? 'md:w-0 -translate-x-full md:-translate-x-0' : 'md:w-[250px] translate-x-0'} ${showFilters ? 'translate-x-0' : 'md:translate-x-0 -translate-x-full'} ${theme === 'light' ? 'bg-gray-50' : 'bg-[#101215]'} z-40 md:z-auto transition-all duration-300 overflow-hidden relative`}
+          className={`md:flex-shrink-0 md:h-auto md:static fixed top-0 left-0 h-full transform ${sidebarCollapsed ? 'md:w-0 -translate-x-full md:-translate-x-0' : 'md:w-[250px] translate-x-0'} ${showFilters ? 'translate-x-0' : 'md:translate-x-0 -translate-x-full'} ${theme === 'light' ? 'bg-gray-50' : 'bg-[#1E1E1E]'} z-40 md:z-auto transition-all duration-300 overflow-hidden relative`}
           style={{
             width: sidebarCollapsed ? (typeof window !== 'undefined' && window.innerWidth >= 768 ? '0' : '250px') : '250px',
             // Only apply inline translate while actively dragging; otherwise let CSS classes handle collapsed state

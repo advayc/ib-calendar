@@ -36,39 +36,56 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
     return eachDayOfInterval({ start: weekStart, end: weekEnd });
   }, [currentDate]);
 
-  // Current time position for the red line indicator
-  const [currentTimePosition, setCurrentTimePosition] = React.useState<number | null>(null);
+  // Refs for measuring actual slot positions to align the current time indicator precisely
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const firstDayHeaderRef = React.useRef<HTMLDivElement | null>(null);
+  const timeSlotRefs = React.useRef<Record<number, HTMLDivElement | null>>({});
+  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
 
   React.useEffect(() => {
-    const updateCurrentTime = () => {
+    // Update every minute to keep time indicator current
+    const interval = setInterval(() => forceUpdate(), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Helper to compute offset of an element relative to the scroll container
+  const getOffsetRelativeToContainer = React.useCallback(
+    (element: HTMLElement | null) => {
+      const container = scrollContainerRef.current;
+      if (!container || !element) return null;
+      let offset = 0;
+      let current: HTMLElement | null = element;
+      while (current && current !== container) {
+        offset += current.offsetTop;
+        current = current.offsetParent as HTMLElement | null;
+      }
+      return current === container ? offset : null;
+    },
+    []
+  );
+
+  // Auto-scroll to center current time on mount
+  React.useEffect(() => {
+    if (scrollContainerRef.current) {
       const now = new Date();
       const hour = now.getHours();
       const minute = now.getMinutes();
       
-      // Calculate position (6 AM = hour 6 is index 0 in our timeSlots)
       if (hour >= 6 && hour <= 23) {
-        const slotIndex = hour - 6;
-        const position = slotIndex * 64 + (minute / 60) * 64;
-        setCurrentTimePosition(position);
-      } else {
-        setCurrentTimePosition(null);
+        const slotElement = timeSlotRefs.current[hour];
+        const slotHeight = slotElement?.offsetHeight ?? getTimeSlotHeight(hour);
+        const slotOffset = getOffsetRelativeToContainer(slotElement);
+        const fallbackHeaderHeight = firstDayHeaderRef.current?.offsetHeight ?? 64;
+
+        const topPosition =
+          (slotOffset ?? (fallbackHeaderHeight + getTimeSlotPosition(hour))) +
+          (minute / 60) * slotHeight;
+
+        const container = scrollContainerRef.current;
+        const containerHeight = container.clientHeight;
+        const scrollTop = Math.max(0, topPosition - (containerHeight / 2));
+        container.scrollTop = scrollTop;
       }
-    };
-
-    updateCurrentTime();
-    const interval = setInterval(updateCurrentTime, 60000); // Update every minute
-    return () => clearInterval(interval);
-  }, []);
-
-  // Auto-scroll to center current time on mount
-  React.useEffect(() => {
-    if (scrollContainerRef.current && currentTimePosition !== null) {
-      const container = scrollContainerRef.current;
-      const containerHeight = container.clientHeight;
-      // Scroll to position the current time in the middle of the viewport
-      const scrollTop = Math.max(0, currentTimePosition - (containerHeight / 2));
-      container.scrollTop = scrollTop;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
@@ -203,9 +220,9 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
       </div>
 
       {/* Week Grid with Time Column */}
-      <div className="flex-1 flex overflow-auto" ref={scrollContainerRef}>
+      <div className="flex-1 flex overflow-auto relative" ref={scrollContainerRef}>
         {/* Time column */}
-        <div className={`w-16 flex-shrink-0 border-r ${isLight ? 'border-gray-200 bg-gray-50' : 'border-[#1E1E1E] bg-[#252525]'}`}>
+        <div className={`w-16 flex-shrink-0 border-r ${isLight ? 'border-gray-200 bg-gray-50' : 'border-[#1E1E1E] bg-[#191919]'}`}>
           {/* Empty corner for day headers */}
           <div className={`h-16 border-b ${isLight ? 'border-gray-200' : 'border-[#1E1E1E]'}`}></div>
           
@@ -214,7 +231,7 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
             <div
               key={hour}
               style={{ height: `${getTimeSlotHeight(hour)}px` }}
-              className={`border-b flex items-start justify-end pr-2 pt-1 ${isLight ? 'border-gray-200 text-gray-500' : 'border-[#1E1E1E] text-gray-500'}`}
+              className={`border-b flex items-start justify-end pr-2 pt-1 ${isLight ? 'border-gray-200 text-gray-500' : 'border-[#1E1E1E] text-gray-400'}`}
             >
               <span className="text-xs">
                 {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
@@ -241,7 +258,10 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
                 className={`border-r ${isLight ? 'border-gray-200' : 'border-[#1E1E1E]'}`}
               >
                 {/* Day Header - centered */}
-                <div className={`h-16 border-b flex flex-col items-center justify-center ${isLight ? 'bg-gray-50 border-gray-200' : 'bg-[#191919] border-[#1E1E1E]'}`}>
+                <div
+                  className={`h-16 border-b flex flex-col items-center justify-center ${isLight ? 'bg-gray-50 border-gray-200' : 'bg-[#191919] border-[#1E1E1E]'}`}
+                  ref={idx === 0 ? firstDayHeaderRef : undefined}
+                >
                   <div className={`text-xs font-medium uppercase ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
                     {format(day, 'EEE')}
                   </div>
@@ -265,6 +285,7 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
                       key={hour}
                       style={{ height: `${getTimeSlotHeight(hour)}px` }}
                       className={`border-b ${isLight ? 'border-gray-200' : 'border-[#1E1E1E]'}`}
+                      ref={idx === 0 ? (el) => { timeSlotRefs.current[hour] = el; } : undefined}
                     ></div>
                   ))}
                   
@@ -343,29 +364,34 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
         </div>
         
         {/* Current time indicator spanning all days */}
-        {currentTimePosition !== null && (() => {
+        {(() => {
           const now = new Date();
           const hour = now.getHours();
           const minute = now.getMinutes();
           
-          let topPosition = 0;
-          if (hour >= 6 && hour <= 23) {
-            const basePosition = getTimeSlotPosition(hour);
-            const slotHeight = getTimeSlotHeight(hour);
-            topPosition = basePosition + (minute / 60) * slotHeight + 64;
-          }
+          if (hour < 6 || hour > 23) return null;
+          
+          const slotElement = timeSlotRefs.current[hour];
+          const slotHeight = slotElement?.offsetHeight ?? getTimeSlotHeight(hour);
+          const slotOffset = getOffsetRelativeToContainer(slotElement);
+          const fallbackHeaderHeight = firstDayHeaderRef.current?.offsetHeight ?? 64;
+          const basePosition = slotOffset ?? (fallbackHeaderHeight + getTimeSlotPosition(hour));
+          const topPosition = basePosition + (minute / 60) * slotHeight;
+          
+          // Format time for label
+          const timeLabel = `${hour === 0 ? 12 : hour > 12 ? hour - 12 : hour}:${minute.toString().padStart(2, '0')} ${hour < 12 ? 'AM' : 'PM'}`;
           
           return (
             <>
               {/* Faint line across all days */}
               <div
                 className="absolute left-16 right-0 pointer-events-none z-10"
-                style={{ top: `${topPosition}px` }}
+                style={{ top: `${topPosition}px`, transform: 'translateY(-50%)' }}
               >
                 <div className="w-full h-[2px] bg-[#FF3B30] opacity-30"></div>
               </div>
               
-              {/* Bright dot and line on current day */}
+              {/* Bright dot, line and time label on current day */}
               {weekDays.map((day, dayIndex) => {
                 const isDayToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
                 if (!isDayToday) return null;
@@ -375,16 +401,21 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
                 
                 return (
                   <div
-                    key={`time-dot-${dayIndex}`}
+                    key={`time-indicator-${dayIndex}`}
                     className="absolute pointer-events-none z-20"
                     style={{ 
                       left: leftPosition,
                       width: columnWidth,
                       top: `${topPosition}px`,
-                      transform: 'translateY(-1px)'
+                      transform: 'translateY(-50%)'
                     }}
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center relative">
+                      {/* Time label on the left */}
+                      <div className="absolute right-full mr-1 bg-[#FF3B30] text-white text-[10px] font-semibold px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">
+                        {timeLabel}
+                      </div>
+                      {/* Red dot, then line extending to right (no line on left) */}
                       <div className="w-2 h-2 rounded-full bg-[#FF3B30]"></div>
                       <div className="flex-1 h-[2px] bg-[#FF3B30]"></div>
                     </div>

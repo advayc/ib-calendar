@@ -81,7 +81,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ activeDate, onChangeDate, t
       className={`w-full h-full min-h-0 flex flex-col ${
         isLight
           ? 'bg-gray-50 text-gray-800 border-r border-gray-200'
-          : 'bg-[#101215] text-gray-200 border-r border-[#1e2022]'
+          : 'bg-[#1E1E1E] text-gray-200 border-r border-[#1e2022]'
       }`}
     >
       <div className="px-4 pt-6 pb-4 flex-shrink-0">
@@ -97,7 +97,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ activeDate, onChangeDate, t
       {/* Grade filter */}
       <div className="px-4 mb-3 flex-shrink-0">
         <div className="flex gap-1 p-0.5 rounded-lg bg-opacity-50" style={{
-          backgroundColor: isLight ? '#e5e7eb' : '#1a1c1e'
+          backgroundColor: isLight ? '#e5e7eb' : '#252525'
         }}>
           {(['all', 'DP2', 'DP1'] as const).map(grade => (
             <button
@@ -107,7 +107,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ activeDate, onChangeDate, t
                 selectedGrade === grade
                   ? isLight
                     ? 'bg-white text-gray-900 shadow-sm'
-                    : 'bg-[#2a2c2f] text-gray-100 shadow-sm'
+                    : 'bg-[#191919] text-gray-100 shadow-sm'
                   : isLight
                     ? 'text-gray-600 hover:text-gray-900'
                     : 'text-gray-400 hover:text-gray-200'
@@ -129,7 +129,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ activeDate, onChangeDate, t
               const currentIdx = order.indexOf(sortBy);
               setSortBy(order[(currentIdx + 1) % order.length]);
             }}
-            className={`p-1 rounded transition-colors ${isLight ? 'hover:bg-gray-200' : 'hover:bg-[#2a2c2f]'}`}
+            className={`p-1 rounded transition-colors ${isLight ? 'hover:bg-gray-200' : 'hover:bg-[#252525]'}`}
             title={`Sort: ${sortBy === 'default' ? 'Default' : sortBy === 'name-asc' ? 'A-Z' : sortBy === 'name-desc' ? 'Z-A' : 'Enabled First'}`}
           >
             <ArrowUpDown className="w-3.5 h-3.5" />
@@ -144,13 +144,13 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ activeDate, onChangeDate, t
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search courses..."
-          className={`w-full rounded-md border px-2 py-1 text-[13px] outline-none transition focus:ring-2 focus:ring-blue-400 ${isLight ? 'bg-white border-gray-200 text-gray-800 placeholder:text-gray-400' : 'bg-[#181a1d] border-[#23262a] text-gray-200 placeholder:text-gray-400'}`}
+          className={`w-full rounded-md border px-2 py-1 text-[13px] outline-none transition focus:ring-2 focus:ring-blue-400 ${isLight ? 'bg-white border-gray-200 text-gray-800 placeholder:text-gray-400' : 'bg-[#252525] border-[#1E1E1E] text-gray-200 placeholder:text-gray-500'}`}
           spellCheck={false}
           autoComplete="off"
         />
       </div>
       
-      <div className={`flex-1 overflow-y-auto px-2 pb-4 ${isLight ? 'bg-gray-50' : 'bg-[#101215]'}`}>
+      <div className={`flex-1 overflow-y-auto px-2 pb-4 ${isLight ? 'bg-gray-50' : 'bg-[#1E1E1E]'}`}>
         {filteredCourses.length === 0 ? (
           <div className={`px-4 py-2 text-sm ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>No courses found</div>
         ) : (
@@ -158,7 +158,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ activeDate, onChangeDate, t
             <button
               key={course.id}
               onClick={() => toggleCourse(course.id)}
-              className={`w-full flex items-center gap-4 rounded-lg px-4 py-3.5 text-left text-[13px] transition-colors group ${isLight ? 'hover:bg-gray-100' : 'hover:bg-[#2A2A2A]'}`}
+              className={`w-full flex items-center gap-4 rounded-lg px-4 py-3.5 text-left text-[13px] transition-colors group ${isLight ? 'hover:bg-gray-100' : 'hover:bg-[#252525]'}`}
             >
               <span
                 className="h-4 w-4 rounded-md flex-shrink-0"
