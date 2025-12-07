@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, X, Edit2, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, Edit2, Trash2, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Event, Course } from '@/types';
 
@@ -50,8 +50,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   const isLight = theme === 'light';
   const cardClass = isLight ? 'bg-white border border-gray-200 shadow-sm' : 'bg-[#1E1E1E] border border-[#2A2A2A]';
   const inputClass = isLight 
-    ? 'bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
-    : 'bg-[#191919] border border-[#2A2A2A] text-gray-100 placeholder-gray-500 focus:border-blue-500';
+    ? 'bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gray-500'
+    : 'bg-[#191919] border border-[#2A2A2A] text-gray-100 placeholder-gray-500 focus:border-gray-600';
 
   const handleAddEvent = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +61,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     }
 
     try {
-      const eventData: any = {
+      const eventData: Omit<Event, 'id'> & { recurrence?: { frequency: string; interval: number; count?: number; until?: string } } = {
         title: newEvent.title,
         date: newEvent.date,
         time: newEvent.time || undefined,
@@ -180,7 +180,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
         </h2>
         <button
           onClick={() => window.open('/', '_blank')}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center gap-2"
         >
           <ExternalLink className="w-4 h-4" /> View Calendar
         </button>
@@ -253,7 +253,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                 type="checkbox"
                 checked={newEvent.isRecurring}
                 onChange={(e) => setNewEvent({ ...newEvent, isRecurring: e.target.checked })}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-gray-500"
               />
               <span className={`text-sm font-medium ${isLight ? 'text-gray-900' : 'text-gray-200'}`}>
                 Recurring Deadline
@@ -269,8 +269,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                     </label>
                     <select
                       value={newEvent.recurrenceFrequency}
-                      onChange={(e) => setNewEvent({ ...newEvent, recurrenceFrequency: e.target.value as any })}
-                      className={`w-full px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${inputClass}`}
+                      onChange={(e) => setNewEvent({ ...newEvent, recurrenceFrequency: e.target.value as 'daily' | 'weekly' | 'biweekly' | 'monthly' })}
+                      className={`w-full px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-gray-500 ${inputClass}`}
                     >
                       <option value="daily">Daily</option>
                       <option value="weekly">Weekly</option>
@@ -356,7 +356,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
             />
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium"
             >
               Add Course
             </button>
@@ -369,7 +369,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
             if (isEditingThisCourse) {
               return (
-                <div key={course.id} className={`p-4 rounded-lg border-2 border-blue-500 ${isLight ? 'bg-blue-50' : 'bg-blue-900/10'}`}>
+                <div key={course.id} className={`p-4 rounded-lg border-2 border-gray-500 ${isLight ? 'bg-gray-50' : 'bg-[#252525]'}`}>
                   <div className="space-y-3">
                     <input
                       type="text"
@@ -473,7 +473,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
               if (isEditing) {
                 return (
-                  <div key={event.id} className={`p-4 rounded-lg border-2 border-blue-500 ${isLight ? 'bg-blue-50' : 'bg-blue-900/10'}`}>
+                  <div key={event.id} className={`p-4 rounded-lg border-2 border-gray-500 ${isLight ? 'bg-gray-50' : 'bg-[#252525]'}`}>
                     <div className="space-y-3">
                       <input
                         type="text"
@@ -558,7 +558,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                           location: event.location,
                         });
                       }}
-                      className="p-2 hover:bg-blue-500/10 text-blue-500 rounded-lg transition-colors"
+                      className="p-2 hover:bg-gray-500/10 text-gray-500 rounded-lg transition-colors"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>

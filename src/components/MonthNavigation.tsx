@@ -75,7 +75,7 @@ const MonthNavigation: React.FC<MonthNavigationProps> = ({
           <button
             onClick={onToggleTheme}
             aria-label="Toggle Theme"
-            className={`h-8 w-8 flex items-center justify-center rounded-md transition-colors border ${isLight ? 'bg-gray-100 hover:bg-gray-200 text-yellow-500 hover:text-yellow-600 border-gray-200' : 'bg-[#252525] hover:bg-[#2A2A2A] text-blue-300 hover:text-blue-200 border-[#2A2A2A]'}`}
+            className={`h-8 w-8 flex items-center justify-center rounded-md transition-colors border ${isLight ? 'bg-gray-100 hover:bg-gray-200 text-yellow-500 hover:text-yellow-600 border-gray-200' : 'bg-[#252525] hover:bg-[#2A2A2A] text-gray-400 hover:text-gray-300 border-[#2A2A2A]'}`}
           >
             {isLight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
           </button>

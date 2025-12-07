@@ -178,9 +178,9 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
   };
 
   return (
-    <div className={`flex-1 flex flex-col overflow-hidden ${isLight ? 'bg-white' : 'bg-[#0d0e0f]'}`}>
+    <div className={`flex-1 flex flex-col overflow-hidden ${isLight ? 'bg-white' : 'bg-[#191919]'}`}>
       {/* Week Navigation */}
-      <div className={`flex items-center justify-between px-4 py-3 border-b ${isLight ? 'border-gray-200 bg-gray-50' : 'border-[#2A2A2A] bg-[#1E1E1E]'}`}>
+      <div className={`flex items-center justify-between px-4 py-3 border-b ${isLight ? 'border-gray-200 bg-gray-50' : 'border-[#1E1E1E] bg-[#191919]'}`}>
         <button
           onClick={handlePreviousWeek}
           className={`p-2 rounded-lg transition-colors ${isLight ? 'hover:bg-gray-200 text-gray-700' : 'hover:bg-[#2a2c2f] text-gray-300'}`}
@@ -205,16 +205,16 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
       {/* Week Grid with Time Column */}
       <div className="flex-1 flex overflow-auto" ref={scrollContainerRef}>
         {/* Time column */}
-        <div className={`w-16 flex-shrink-0 border-r ${isLight ? 'border-gray-200 bg-gray-50' : 'border-[#2A2A2A] bg-[#1E1E1E]'}`}>
+        <div className={`w-16 flex-shrink-0 border-r ${isLight ? 'border-gray-200 bg-gray-50' : 'border-[#1E1E1E] bg-[#252525]'}`}>
           {/* Empty corner for day headers */}
-          <div className={`h-16 border-b ${isLight ? 'border-gray-200' : 'border-[#1e2022]'}`}></div>
+          <div className={`h-16 border-b ${isLight ? 'border-gray-200' : 'border-[#1E1E1E]'}`}></div>
           
           {/* Time labels */}
           {timeSlots.map(hour => (
             <div
               key={hour}
               style={{ height: `${getTimeSlotHeight(hour)}px` }}
-              className={`border-b flex items-start justify-end pr-2 pt-1 ${isLight ? 'border-gray-200 text-gray-500' : 'border-[#1e2022] text-gray-400'}`}
+              className={`border-b flex items-start justify-end pr-2 pt-1 ${isLight ? 'border-gray-200 text-gray-500' : 'border-[#1E1E1E] text-gray-500'}`}
             >
               <span className="text-xs">
                 {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
@@ -238,10 +238,10 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
             return (
               <div
                 key={idx}
-                className={`border-r ${isLight ? 'border-gray-200' : 'border-[#1e2022]'}`}
+                className={`border-r ${isLight ? 'border-gray-200' : 'border-[#1E1E1E]'}`}
               >
                 {/* Day Header - centered */}
-                <div className={`h-16 border-b flex flex-col items-center justify-center ${isLight ? 'bg-gray-50 border-gray-200' : 'bg-[#1E1E1E] border-[#2A2A2A]'}`}>
+                <div className={`h-16 border-b flex flex-col items-center justify-center ${isLight ? 'bg-gray-50 border-gray-200' : 'bg-[#191919] border-[#1E1E1E]'}`}>
                   <div className={`text-xs font-medium uppercase ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
                     {format(day, 'EEE')}
                   </div>
@@ -264,7 +264,7 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
                     <div
                       key={hour}
                       style={{ height: `${getTimeSlotHeight(hour)}px` }}
-                      className={`border-b ${isLight ? 'border-gray-200' : 'border-[#1e2022]'}`}
+                      className={`border-b ${isLight ? 'border-gray-200' : 'border-[#1E1E1E]'}`}
                     ></div>
                   ))}
                   
@@ -335,37 +335,65 @@ const WeekView: React.FC<WeekViewProps> = ({ events, clubs, currentDate, onDateC
                         );
                       });
                     })()}
-                    
-                    {/* Current time indicator - only show on today */}
-                    {isDayToday && currentTimePosition !== null && (
-                      <div
-                        className="absolute left-0 right-0 pointer-events-none z-10"
-                        style={{ top: `${(() => {
-                          // Recalculate current time position with dynamic heights
-                          const now = new Date();
-                          const hour = now.getHours();
-                          const minute = now.getMinutes();
-                          
-                          if (hour >= 6 && hour <= 23) {
-                            const basePosition = getTimeSlotPosition(hour);
-                            const slotHeight = getTimeSlotHeight(hour);
-                            return basePosition + (minute / 60) * slotHeight;
-                          }
-                          return 0;
-                        })()}px` }}
-                      >
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 rounded-full bg-[#FF3B30] -ml-1"></div>
-                          <div className="flex-1 h-0.5 bg-[#FF3B30]"></div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
             );
           })}
         </div>
+        
+        {/* Current time indicator spanning all days */}
+        {currentTimePosition !== null && (() => {
+          const now = new Date();
+          const hour = now.getHours();
+          const minute = now.getMinutes();
+          
+          let topPosition = 0;
+          if (hour >= 6 && hour <= 23) {
+            const basePosition = getTimeSlotPosition(hour);
+            const slotHeight = getTimeSlotHeight(hour);
+            topPosition = basePosition + (minute / 60) * slotHeight + 64;
+          }
+          
+          return (
+            <>
+              {/* Faint line across all days */}
+              <div
+                className="absolute left-16 right-0 pointer-events-none z-10"
+                style={{ top: `${topPosition}px` }}
+              >
+                <div className="w-full h-[2px] bg-[#FF3B30] opacity-30"></div>
+              </div>
+              
+              {/* Bright dot and line on current day */}
+              {weekDays.map((day, dayIndex) => {
+                const isDayToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+                if (!isDayToday) return null;
+                
+                const leftPosition = `calc(64px + ((100% - 64px) / 7) * ${dayIndex})`;
+                const columnWidth = `calc((100% - 64px) / 7)`;
+                
+                return (
+                  <div
+                    key={`time-dot-${dayIndex}`}
+                    className="absolute pointer-events-none z-20"
+                    style={{ 
+                      left: leftPosition,
+                      width: columnWidth,
+                      top: `${topPosition}px`,
+                      transform: 'translateY(-1px)'
+                    }}
+                  >
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 rounded-full bg-[#FF3B30]"></div>
+                      <div className="flex-1 h-[2px] bg-[#FF3B30]"></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          );
+        })()}
       </div>
     </div>
   );

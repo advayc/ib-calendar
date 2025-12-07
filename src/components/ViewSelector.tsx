@@ -68,8 +68,8 @@ const ViewSelector: React.FC<ViewSelectorProps> = ({ currentView, onViewChange, 
               className={`w-full px-4 py-2 text-left text-sm transition-colors ${
                 currentView === view.value
                   ? isLight
-                    ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'bg-blue-900/30 text-blue-400 font-medium'
+                    ? 'bg-gray-100 text-gray-800 font-medium'
+                    : 'bg-[#252525] text-gray-200 font-medium'
                   : isLight
                     ? 'text-gray-700 hover:bg-gray-50'
                     : 'text-gray-300 hover:bg-[#2a2c2f]'
