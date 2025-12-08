@@ -75,11 +75,12 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ value, onChange, activeDate
         {days.map((d) => {
           const faded = !isSameMonth(d, activeDate);
           
-          // Use normalized date comparison for isToday check
-          const todayDate = new Date();
-          const normalizedToday = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
-          const normalizedD = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-          const today = normalizedD.getTime() === normalizedToday.getTime();
+          // Use consistent date normalization (midnight local time)
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const normalizedD = new Date(d);
+          normalizedD.setHours(0, 0, 0, 0);
+          const isTodayValue = normalizedD.getTime() === today.getTime();
           
           const selected = isSameDay(d, value);
             return (
@@ -87,7 +88,7 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ value, onChange, activeDate
                 key={d.toISOString()}
                 onClick={() => onChange?.(d)}
                 className={`h-8 w-8 flex items-center justify-center rounded-md transition-colors focus:outline-none ${
-                  today
+                  isTodayValue
                     ? 'bg-[#FF3B30] text-white font-semibold'
                     : faded
                       ? isLight
@@ -96,7 +97,7 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ value, onChange, activeDate
                       : isLight
                         ? 'text-gray-700'
                         : 'text-gray-300'
-                } ${selected && !today ? (isLight ? 'bg-gray-200' : 'bg-[#2a2c2e]') : ''} ${isLight ? 'hover:bg-gray-200' : 'hover:bg-[#22252a]'}`}
+                } ${selected && !isTodayValue ? (isLight ? 'bg-gray-200' : 'bg-[#2a2c2e]') : ''} ${isLight ? 'hover:bg-gray-200' : 'hover:bg-[#22252a]'}`}
                 suppressHydrationWarning
               >
                 {mounted ? format(d, 'd') : ''}

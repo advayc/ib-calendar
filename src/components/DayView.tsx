@@ -97,11 +97,12 @@ const DayView: React.FC<DayViewProps> = ({ events, clubs, currentDate, onDateCha
 
   const isLight = theme === 'light';
   
-  // Use normalized date comparison for isToday check
+  // Use consistent date normalization (midnight local time)
   const today = new Date();
-  const normalizedToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const normalizedCurrent = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-  const isDayToday = normalizedCurrent.getTime() === normalizedToday.getTime();
+  today.setHours(0, 0, 0, 0);
+  const normalizedCurrent = new Date(currentDate);
+  normalizedCurrent.setHours(0, 0, 0, 0);
+  const isDayToday = normalizedCurrent.getTime() === today.getTime();
 
   // Generate time slots for the day (6 AM to 11 PM)
   const timeSlots = useMemo(() => {

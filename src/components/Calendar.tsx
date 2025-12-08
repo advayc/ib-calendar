@@ -54,7 +54,7 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
   const isLight = theme === 'light';
 
   return (
-    <div className={`flex-1 flex flex-col ${isLight ? 'bg-white' : 'bg-[#0d0e0f]'}`}>
+    <div className={`flex-1 flex flex-col ${isLight ? 'bg-white' : 'bg-[#191919]'}`}>
       <MonthNavigation
         currentDate={currentDate}
         onPreviousMonth={handlePreviousMonth}
@@ -66,7 +66,7 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
       
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Weekday headers */}
-        <div className={`hidden sm:grid grid-cols-7 border-b text-[11px] font-medium tracking-wide ${isLight ? 'bg-gray-100 border-gray-200' : 'bg-[#1E1E1E] border-[#2A2A2A]'}`}>        
+        <div className={`hidden sm:grid grid-cols-7 border-b text-[11px] font-medium tracking-wide ${isLight ? 'bg-gray-100 border-gray-200' : 'bg-[#1E1E1E] border-[#1E1E1E]'}`}>        
           {weekDays.map(day => (
             <div
               key={day}
@@ -77,7 +77,7 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
           ))}
         </div>
         {/* Mobile weekday header (sticky) */}
-        <div className={`sm:hidden grid grid-cols-7 text-[10px] font-medium tracking-wide border-b ${isLight ? 'bg-gray-100/90 backdrop-blur border-gray-200' : 'bg-[#1E1E1E]/80 backdrop-blur border-[#2A2A2A]'}`}>        
+        <div className={`sm:hidden grid grid-cols-7 text-[10px] font-medium tracking-wide border-b ${isLight ? 'bg-gray-100/90 backdrop-blur border-gray-200' : 'bg-[#1E1E1E]/80 backdrop-blur border-[#1E1E1E]'}`}>        
           {weekDays.map(day => (
             <div key={day} className={`py-2 text-center uppercase ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>{day}</div>
           ))}
@@ -95,8 +95,8 @@ const Calendar: React.FC<CalendarProps> = ({ events, clubs, controlledDate, onDa
                       ? 'bg-gray-50 text-gray-400 border-gray-200'
                       : 'bg-white text-gray-800 border-gray-200'
                     : isFaded
-                      ? 'bg-[#0f1112] text-[#4a4c4f] border-[#1e2022]'
-                      : 'bg-[#14161a] text-gray-200 border-[#1e2022]'
+                      ? 'bg-[#0f1112] text-[#4a4c4f] border-[#1E1E1E]'
+                      : 'bg-[#191919] text-gray-200 border-[#1E1E1E]'
                 }`}
               >
                 <div className="flex justify-end pt-0.5 pr-0.5 sm:pt-1 sm:pr-1">

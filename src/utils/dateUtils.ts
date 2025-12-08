@@ -48,7 +48,11 @@ export const getCalendarDays = (date: Date, events: Event[]): CalendarDay[] => {
   // Normalize event dates to local YYYY-MM-DD to avoid timezone shift when
   // comparing Date objects stored as ISO strings. If the incoming event.date
   // is a plain YYYY-MM-DD string, parse it as a local date (no timezone).
-  const normalizeDateOnly = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const normalizeDateOnly = (d: Date) => {
+    const normalized = new Date(d);
+    normalized.setHours(0, 0, 0, 0);
+    return normalized;
+  };
 
   const parseEventDateAsLocal = (dateVal: unknown): Date | null => {
     if (!dateVal) return null;
@@ -69,8 +73,10 @@ export const getCalendarDays = (date: Date, events: Event[]): CalendarDay[] => {
   };
 
   // Create a normalized "today" date for reliable comparison
+  // Force to browser's local midnight to avoid any timezone issues
   const today = new Date();
-  const normalizedToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  today.setHours(0, 0, 0, 0);
+  const normalizedToday = today;
 
   return days.map(day => {
     const dayStart = normalizeDateOnly(day);
